@@ -75,6 +75,7 @@ textarea{min-height:120px;font-family:ui-monospace,Menlo,monospace;font-size:.8r
 .game{display:block;width:100%;text-align:left;min-height:104px;padding:18px 16px}
 .game-txt,.ghead-txt{position:relative;z-index:1;max-width:62%;display:flex;flex-direction:column;gap:4px}
 .game h2{font-size:1.45rem;font-weight:800}
+.game p{font-weight:700;font-size:.85rem;letter-spacing:.01em}
 .game p,.ghead .eyebrow,.ghead-sub{color:var(--th-soft)}
 .gart{position:absolute;right:-6px;bottom:-4px;height:112%;width:auto;pointer-events:none}
 .ghead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:18px 16px;min-height:110px}
@@ -246,6 +247,22 @@ table.scores{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nu
 .tabbar button.on{color:var(--accent)}
 .tabbar svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
+/* Thèmes de page par jeu */
+body[data-theme]:not([data-theme=""]){background-image:none;background-attachment:fixed}
+body[data-theme]:not([data-theme=""])::before{display:none}
+body[data-theme="skyjo"]{--surface-2:#e9f0fb;--border:#d3deef;--accent:#1f5fc4;--accent-soft:#e1ecfb;--paper:#eef4fb;background:linear-gradient(165deg,#e6efff 0%,#eaf6ec 50%,#fff2e2 100%) fixed}
+body[data-theme="flip7"]{--surface-2:#f9e9ea;--border:#ecd2d5;--accent:#b3122f;--accent-soft:#fbe3e7;--paper:#fff7ea;background:radial-gradient(circle at 100% 0%,#fde3e3 0%,#fff7ea 45%) fixed}
+body[data-theme="lostcities"]{--surface-2:#f2e6cf;--border:#e2d0ac;--accent:#8a5a1f;--accent-soft:#f1e3c6;--paper:#f6ecd8;background:linear-gradient(180deg,#f7eedb 0%,#efdfbd 100%) fixed}
+body[data-theme="sevenw"]{--surface-2:#efe5d1;--border:#ddcdac;--accent:#7d5a28;--accent-soft:#efe2c8;--paper:#f3ead8;background:linear-gradient(180deg,#f5eddc 0%,#e9dbbd 100%) fixed}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body[data-theme="skyjo"]{--surface:#16203a;--surface-2:#1f2a48;--border:#2d3a5c;--accent:#7fb0ff;--accent-soft:#1e2f52;background:linear-gradient(165deg,#0f1a33 0%,#0f2118 55%,#2a1a10 100%) fixed}
+ :root:not([data-theme="light"]) body[data-theme="flip7"]{--surface:#22141a;--surface-2:#2e1a21;--border:#46262e;--accent:#ff7085;--accent-soft:#3a1520;background:radial-gradient(circle at 100% 0%,#3a0f19 0%,#170b0f 50%) fixed}
+ :root:not([data-theme="light"]) body[data-theme="lostcities"]{--surface:#231c11;--surface-2:#2f2618;--border:#45381f;--accent:#e0b36a;--accent-soft:#3a2d18;background:linear-gradient(180deg,#1d170e 0%,#2a2010 100%) fixed}
+ :root:not([data-theme="light"]) body[data-theme="sevenw"]{--surface:#211a10;--surface-2:#2c2316;--border:#43361f;--accent:#d9b37a;--accent-soft:#352a1a;background:linear-gradient(180deg,#17120b 0%,#251c10 100%) fixed}}
+:root[data-theme="dark"] body[data-theme="skyjo"]{--surface:#16203a;--surface-2:#1f2a48;--border:#2d3a5c;--accent:#7fb0ff;--accent-soft:#1e2f52;background:linear-gradient(165deg,#0f1a33 0%,#0f2118 55%,#2a1a10 100%) fixed}
+:root[data-theme="dark"] body[data-theme="flip7"]{--surface:#22141a;--surface-2:#2e1a21;--border:#46262e;--accent:#ff7085;--accent-soft:#3a1520;background:radial-gradient(circle at 100% 0%,#3a0f19 0%,#170b0f 50%) fixed}
+:root[data-theme="dark"] body[data-theme="lostcities"]{--surface:#231c11;--surface-2:#2f2618;--border:#45381f;--accent:#e0b36a;--accent-soft:#3a2d18;background:linear-gradient(180deg,#1d170e 0%,#2a2010 100%) fixed}
+:root[data-theme="dark"] body[data-theme="sevenw"]{--surface:#211a10;--surface-2:#2c2316;--border:#43361f;--accent:#d9b37a;--accent-soft:#352a1a;background:linear-gradient(180deg,#17120b 0%,#251c10 100%) fixed}
+body[data-theme="sevenw"] .eyebrow,body[data-theme="lostcities"] .eyebrow{letter-spacing:.12em}
 /* Animations */
 .btn,.chip,.cardbtn,.icon-btn,.tab,.fin,.game,.resume,.chooser-cta{transition:transform .12s ease,background-color .15s,border-color .15s,color .15s}
 .btn:active,.chip:active,.cardbtn:active,.icon-btn:active,.tab:active,.fin:active,.game:active,.resume:active,.chooser-cta:active{transform:scale(.96)}
@@ -468,10 +485,10 @@ const PCOLORS=['#e4572e','#13998c','#d99a00','#3a5bd9','#c2409a','#4c9a2a','#8a5
 const XCOLORS=PCOLORS.concat(['#1f2937','#e11d74','#65a30d','#0d9488','#a16207','#6d28d9']);
 const SYMS=['🦊','🐼','🐸','🐙','🦉','🐢','🦁','🐧','🦄','🐝','🐳','🦖','🌵','🍄','🌻','🔥','⚡','🌙','⭐','🎲','🃏','👑','🚀','🎯'];
 const GAMES={
-  skyjo:{name:'Skyjo',gc:'--g-skyjo',min:2,max:8,variants:{normal:'Classique',action:'Action'},rule:'Fin à 100 points · le plus petit total gagne'},
-  flip7:{name:'Flip 7',gc:'--g-f7',min:2,max:18,variants:{classic:'Classique',vengeance:'Vengeance',sanspitie:'Sans pitié'},rule:'Premier à 200 points · le plus gros total gagne'},
-  lostcities:{name:'Lost Cities',gc:'--g-lc',min:2,max:2,variants:{standard:'Standard'},rule:'Le plus gros total après les manches gagne'},
-  sevenw:{name:'7 Wonders',gc:'--g-7w',min:3,max:7,variants:{base:'Base'},rule:'Décompte final · égalité départagée au trésor'}
+  skyjo:{name:'Skyjo',gc:'--g-skyjo',min:2,max:8,variants:{normal:'Classique',action:'Action'},rule:'2 à 8 joueurs · le plus petit score gagne'},
+  flip7:{name:'Flip 7',gc:'--g-f7',min:2,max:18,variants:{classic:'Classique',vengeance:'Vengeance',sanspitie:'Sans pitié'},rule:'Dès 3 joueurs · premier à 200 points'},
+  lostcities:{name:'Lost Cities',gc:'--g-lc',min:2,max:2,variants:{standard:'Standard'},rule:'En duel · 3 expéditions'},
+  sevenw:{name:'7 Wonders',gc:'--g-7w',min:3,max:7,variants:{base:'Base'},rule:'3 à 7 joueurs · décompte final'}
 };
 const GAME_ART={
  skyjo:`<svg viewBox="0 0 160 100" class="gart"><g transform="translate(70 18) rotate(-14)"><rect width="44" height="62" rx="7" fill="#1f3fa8" stroke="#fff" stroke-width="3"/><text x="22" y="40" text-anchor="middle" font-size="22" font-weight="800" fill="#fff">-2</text></g><g transform="translate(92 14) rotate(2)"><rect width="44" height="62" rx="7" fill="#f2c230" stroke="#fff" stroke-width="3"/><text x="22" y="40" text-anchor="middle" font-size="22" font-weight="800" fill="#5a3b00">5</text></g><g transform="translate(112 16) rotate(16)"><rect width="44" height="62" rx="7" fill="#e2482f" stroke="#fff" stroke-width="3"/><text x="22" y="40" text-anchor="middle" font-size="22" font-weight="800" fill="#fff">12</text></g></svg>`,
@@ -921,6 +938,7 @@ function render(){
   const tabView={home:'home',setup:'home',game:'home',round:'home',players:'players',history:'history',stats:'stats'}[UI.view];
   ['home','players','history','stats'].forEach(v=>document.getElementById('t-'+v).classList.toggle('on',v===tabView||(v==='history'&&UI.view==='game'&&gameById(UI.gameId)?.status==='done')));
   document.getElementById('t-home').classList.toggle('on',tabView==='home'&&!(UI.view==='game'&&gameById(UI.gameId)?.status==='done'));
+  const thv=['setup','game','round'].includes(UI.view)?(UI.view==='setup'?UI.setup&&UI.setup.type:(gameById(UI.view==='round'?UI.draft&&UI.draft.gameId:UI.gameId)||{}).type):'';document.body.dataset.theme=thv||'';
   document.getElementById('tabbar').hidden=UI.view==='chooser'||UI.view==='reveal'||UI.view==='wheel';
   if(UI.view==='chooser')initChooser();
   if(UI.view==='reveal'&&UI.duel===2){countUp();if(!UI.duelCele){UI.duelCele=true;setTimeout(()=>confetti(),300)}}
