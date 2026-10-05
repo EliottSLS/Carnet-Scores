@@ -171,9 +171,9 @@ table.scores{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nu
 .swrow .coinwrap input{color:var(--ink);padding-left:26px}
 .swconv{color:var(--accent);font-weight:700;font-size:.9rem;margin-left:4px}
 .azwall{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;max-width:330px;width:100%;margin:0 auto}
-.az-cell{aspect-ratio:1;max-width:100%;border-radius:9px;border:2px dashed color-mix(in srgb,var(--tc) 60%,transparent);background:color-mix(in srgb,var(--tc) 14%,var(--surface))}
-.az-cell.old{background:var(--tc);border:2px solid color-mix(in srgb,var(--tc) 70%,#000);opacity:.85}
-.az-cell.new{background:var(--tc);border:2px solid var(--ink);box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.az-cell{background-size:86% 86%;background-position:center;background-repeat:no-repeat;aspect-ratio:1;max-width:100%;border-radius:9px;border:2px dashed color-mix(in srgb,var(--tc) 60%,transparent);background-color:color-mix(in srgb,var(--tc) 14%,var(--surface))}
+.az-cell.old{background-color:var(--tc);border:2px solid color-mix(in srgb,var(--tc) 70%,#000);opacity:.85}
+.az-cell.new{background-color:var(--tc);border:2px solid var(--ink);box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
 .az-det{text-align:center;min-height:1.3em}
 .swrow{display:grid;grid-template-columns:minmax(0,1fr) 84px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
 .swrow:last-child{border-bottom:0}
@@ -385,6 +385,13 @@ function f7Player(v,p){
 }
 const AZ_COLS=[{n:'Bleu',c:'#2a6fdb'},{n:'Jaune',c:'#f2b62b'},{n:'Rouge',c:'#d8433b'},{n:'Noir',c:'#2b2f3a'},{n:'Turquoise',c:'#36c2c4'}];
 const azColor=(r,c)=>(c-r+5)%5;
+const AZ_SVG=[
+ `<circle cx="20" cy="11" r="5.5" fill="#fff"/><circle cx="20" cy="29" r="5.5" fill="#fff"/><circle cx="11" cy="20" r="5.5" fill="#fff"/><circle cx="29" cy="20" r="5.5" fill="#fff"/><rect x="15" y="15" width="10" height="10" transform="rotate(45 20 20)" fill="#2a6fdb" stroke="#fff" stroke-width="2"/><circle cx="20" cy="20" r="2" fill="#fff"/>`,
+ `<rect x="9" y="9" width="22" height="22" transform="rotate(45 20 20)" fill="none" stroke="#c43a1d" stroke-width="2.6"/><rect x="15" y="15" width="10" height="10" transform="rotate(45 20 20)" fill="#c43a1d"/><circle cx="5" cy="5" r="2.4" fill="#c43a1d"/><circle cx="35" cy="5" r="2.4" fill="#c43a1d"/><circle cx="5" cy="35" r="2.4" fill="#c43a1d"/><circle cx="35" cy="35" r="2.4" fill="#c43a1d"/>`,
+ `<path d="M20 5 L24 16 L35 20 L24 24 L20 35 L16 24 L5 20 L16 16 Z" fill="#1b2a55"/><path d="M9 9 L20 14 L31 9 L26 20 L31 31 L20 26 L9 31 L14 20 Z" fill="#1b2a55" opacity=".55"/><circle cx="20" cy="20" r="4" fill="#fff"/>`,
+ `<g stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M20 6 V34 M6 20 H34 M10 10 L30 30 M30 10 L10 30"/><path d="M16 8 L20 12 L24 8 M16 32 L20 28 L24 32 M8 16 L12 20 L8 24 M32 16 L28 20 L32 24" fill="none"/></g><circle cx="20" cy="20" r="3" fill="#2b2f3a" stroke="#fff" stroke-width="2"/>`,
+ `<g fill="#1b4f8a"><ellipse cx="20" cy="11" rx="4.5" ry="7.5"/><ellipse cx="20" cy="29" rx="4.5" ry="7.5"/><ellipse cx="11" cy="20" rx="7.5" ry="4.5"/><ellipse cx="29" cy="20" rx="7.5" ry="4.5"/></g><circle cx="20" cy="20" r="4.5" fill="#fff" stroke="#1b4f8a" stroke-width="2"/>`];
+const azMotif=(k,ghost)=>`url('data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><g opacity='${ghost?.28:1}'>${AZ_SVG[k].replace(/"/g,"'")}</g></svg>`).replace(/'/g,'%27')}')`;
 const AZ_PEN=[1,1,2,2,2,3,3];
 const azPen=n=>AZ_PEN.slice(0,Math.min(n,7)).reduce((a,b)=>a+b,0);
 const azEmpty=()=>[0,1,2,3,4].map(()=>[0,0,0,0,0]);
@@ -396,7 +403,7 @@ function azRun(g,rounds){const ids=g.players.map(p=>p.id),W={},T={};ids.forEach(
     ids.forEach(id=>{const pr=(r&&r.p&&r.p[id])||{};const pl=(pr.place||[]).slice().sort((a,b)=>a[0]-b[0]);let gain=0;const tiles=[];
       pl.forEach(([rr,cc])=>{if(W[id][rr][cc])return;W[id][rr][cc]=1;const v=azTile(W[id],rr,cc);gain+=v;tiles.push(v)});
       const pen=azPen(toInt(pr.floor));const nt=Math.max(0,T[id]+gain-pen);det[id]={gain,pen,tiles,bonus:0};out[id]=nt-T[id];T[id]=nt});
-    if(!ended&&ids.some(id=>W[id].some(row=>row.every(Boolean)))){ended=true;ids.forEach(id=>{const b=azBonus(W[id]);det[id].bonus=b.pts;det[id].b=b;out[id]+=b.pts;T[id]+=b.pts})}
+    if(!ended&&ids.some(id=>W[id].some(row=>row.every(Boolean)))){ended=true;ids.forEach(id=>{const b=azBonus(W[id]);det[id].bonus=b.pts;det[id].b=b})}
     return{out,det,walls:JSON.parse(JSON.stringify(W)),ended}})}
 function roundScores(g,r){
   const ids=g.players.map(p=>p.id),out={},meta={};
@@ -412,7 +419,7 @@ function roundScores(g,r){
     let idx=g.rounds.indexOf(r),list=g.rounds;
     if(idx<0){idx=(typeof UI!=='undefined'&&UI.draft&&UI.draft.index!=null)?UI.draft.index:g.rounds.length;list=g.rounds.slice();list[idx]=r}
     const last=azRun(g,list.slice(0,idx+1))[idx];
-    ids.forEach(id=>{out[id]=last.out[id];if(last.det[id].bonus)meta[id]='+'+last.det[id].bonus+' bonus'});
+    ids.forEach(id=>{out[id]=last.out[id]});
   }else{
     ids.forEach(id=>out[id]=0);
     ids.forEach(id=>{
@@ -454,7 +461,8 @@ function sciAdvice(o){o=o||{};const n=(o.jk||[]).length;if(!n)return [];const x=
 function swCat(sh,c){sh=sh||{};if(c.sci)return sciScore(sh.sci);const v=toInt(sh[c.k]);if(c.coins)return Math.floor(v/3);return c.neg?-v:v}
 function swTotal(g,sh){return swCats(g).reduce((t,c)=>t+swCat(sh,c),0)}
 function isLow(g){return g.type==='skyjo'}
-function totals(g){const t={};g.players.forEach(p=>t[p.id]=0);g.rounds.forEach(r=>{const{scores}=roundScores(g,r);for(const id in scores)t[id]+=scores[id]});return t}
+function azFinal(g){if(g.type!=='azul'||!g.rounds.length)return null;const run=azRun(g,g.rounds);const k=run.findIndex(x=>x.ended);if(k<0)return null;const o={};g.players.forEach(p=>o[p.id]=run[k].det[p.id].b);return o}
+function totals(g){const t={};g.players.forEach(p=>t[p.id]=0);g.rounds.forEach(r=>{const{scores}=roundScores(g,r);for(const id in scores)t[id]+=scores[id]});const fb=azFinal(g);if(fb)for(const id in fb)t[id]+=fb[id].pts;return t}
 function endState(g){
   const t=totals(g),ids=g.players.map(p=>p.id),vals=ids.map(i=>t[i]);
   let over;
@@ -555,13 +563,15 @@ function scoreTable(g,editable){
   const t=totals(g);const vals=g.players.map(p=>t[p.id]);
   const best=g.rounds.length?(isLow(g)?Math.min(...vals):Math.max(...vals)):null;
   return `<div class="scroll-x"><table class="scores"><thead><tr><th>Manche</th>${g.players.map(p=>`<th><span class="row" style="gap:6px;justify-content:center;flex-wrap:nowrap"><span class="dot" style="--pc:${p.color}"></span>${esc(p.name)}</span></th>`).join('')}</tr></thead>
-  <tbody>${g.rounds.map((r,i)=>{const{scores,meta}=roundScores(g,r);return `<tr class="${UI.flash===i?'flash':''}" ${editable?`data-a="edit-round" data-i="${i}"`:''}><td>${i+1}${editable?' ✎':''}</td>${g.players.map(p=>`<td class="${scores[p.id]<0?(isLow(g)?'goodnum':'neg'):''}">${fmt(scores[p.id])}${meta[p.id]?`<span class="tag ${meta[p.id]==='Flip 7'||/bonus/.test(meta[p.id])?'good':''}">${meta[p.id]}</span>`:''}</td>`).join('')}</tr>`}).join('')||`<tr><td colspan="${g.players.length+1}" class="muted" style="text-align:center;font-family:var(--f-body);font-weight:400">Aucune manche pour l'instant</td></tr>`}</tbody>
+  <tbody>${g.rounds.map((r,i)=>{const{scores,meta}=roundScores(g,r);return `<tr class="${UI.flash===i?'flash':''}" ${editable?`data-a="edit-round" data-i="${i}"`:''}><td>${i+1}${editable?' ✎':''}</td>${g.players.map(p=>`<td class="${scores[p.id]<0?(isLow(g)?'goodnum':'neg'):''}">${fmt(scores[p.id])}${meta[p.id]?`<span class="tag ${meta[p.id]==='Flip 7'||/bonus/.test(meta[p.id])?'good':''}">${meta[p.id]}</span>`:''}</td>`).join('')}</tr>`}).join('')||`<tr><td colspan="${g.players.length+1}" class="muted" style="text-align:center;font-family:var(--f-body);font-weight:400">Aucune manche pour l'instant</td></tr>`}
+  ${(()=>{const fb=azFinal(g);return fb?`<tr class="az-bonus"><td>Bonus</td>${g.players.map(p=>`<td title="${fb[p.id].rows} ligne(s), ${fb[p.id].cols} colonne(s), ${fb[p.id].colors} couleur(s)">+${fb[p.id].pts}</td>`).join('')}</tr>`:''})()}</tbody>
   <tfoot class="${UI.flash!=null?'bump':''}"><tr><td>Total</td>${g.players.map(p=>`<td class="${best!==null&&t[p.id]===best?'lead':''}">${fmt(t[p.id])}</td>`).join('')}</tr></tfoot></table></div>`;
 }
 function niceStep(range){const raw=range/4;const p=Math.pow(10,Math.floor(Math.log10(raw||1)));const f=raw/p;return (f<=1?1:f<=2?2:f<=5?5:10)*p}
 function chartData(g){
   const cum={};g.players.forEach(p=>cum[p.id]=[0]);
   g.rounds.forEach(r=>{const{scores}=roundScores(g,r);g.players.forEach(p=>{const a=cum[p.id];a.push(a[a.length-1]+scores[p.id])})});
+  const fb=azFinal(g);if(fb)g.players.forEach(p=>{const a=cum[p.id];a.push(a[a.length-1]+fb[p.id].pts)});
   return cum;
 }
 function swTable(g,editable,hidden){
@@ -573,7 +583,7 @@ function swTable(g,editable,hidden){
 }
 function scoreChart(g){
   if(!g.rounds.length||g.type==='sevenw')return '';
-  const cum=chartData(g),n=g.rounds.length;
+  const cum=chartData(g),n=cum[g.players[0].id].length-1,bonusStep=!!azFinal(g);
   const all=g.players.flatMap(p=>cum[p.id]);
   const target=g.type==='skyjo'?100:g.type==='flip7'?200:null;
   let lo=Math.min(0,...all),hi=Math.max(1,...all);
@@ -583,7 +593,7 @@ function scoreChart(g){
   const W=340,H=210,L=36,R=labels?62:14,T=12,B=26;
   const x=i=>L+(n?i/n:0)*(W-L-R),y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
   let grid='';for(let v=lo;v<=hi+1e-9;v+=step)grid+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" class="ch-grid${v===0?' zero':''}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end" class="ch-tick">${fmt(v)}</text>`;
-  const every=Math.ceil(n/8);let xt='';for(let i=0;i<=n;i++)if(i%every===0||i===n)xt+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle" class="ch-tick">${i===0?'':i}</text>`;
+  const every=Math.ceil(n/8);let xt='';for(let i=0;i<=n;i++)if(i%every===0||i===n)xt+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle" class="ch-tick">${i===0?'':bonusStep&&i===n?'Bonus':i}</text>`;
   const tgt=showTarget?`<line x1="${L}" x2="${W-R}" y1="${y(target)}" y2="${y(target)}" class="ch-target"/><text x="${W-R}" y="${y(target)-5}" text-anchor="end" class="ch-tick">Fin à ${target}</text>`:'';
   const lines=g.players.map(p=>{const pts=cum[p.id].map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');return `<polyline pathLength="1" class="ch-line" points="${pts}" fill="none" stroke="${p.color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${x(n)}" cy="${y(cum[p.id][n])}" r="4.5" fill="${p.color}" stroke="var(--surface)" stroke-width="2"/>`}).join('');
   let ends='';
@@ -600,10 +610,10 @@ function attachChart(){
   const tip=document.getElementById('ch-tip'),cross=document.getElementById('ch-x'),svg=box.querySelector('svg');
   const show=e=>{const r=e.target.closest('rect[data-i]');if(!r)return;const i=+r.dataset.i;
     const pt=svg.createSVGPoint();const rx=+r.getAttribute('x')+(+r.getAttribute('width'))/2;
-    const n=g.rounds.length;const W=340,L=36,R=g.players.length<=4?62:14;const cx=L+(n?i/n:0)*(W-L-R);
+    const n=cum[g.players[0].id].length-1,bs=!!azFinal(g);const W=340,L=36,R=g.players.length<=4?62:14;const cx=L+(n?i/n:0)*(W-L-R);
     cross.setAttribute('x1',cx);cross.setAttribute('x2',cx);cross.setAttribute('visibility','visible');
     const rows=[...g.players].sort((a,b)=>isLow(g)?cum[a.id][i]-cum[b.id][i]:cum[b.id][i]-cum[a.id][i]);
-    tip.innerHTML=`<b>${i===0?'Départ':'Après la manche '+i}</b>`+rows.map(p=>`<div class="row between" style="gap:12px;flex-wrap:nowrap"><span class="row" style="gap:6px;flex-wrap:nowrap"><span class="dot" style="--pc:${p.color}"></span>${esc(p.name)}</span><span class="num">${fmt(cum[p.id][i])}</span></div>`).join('');
+    tip.innerHTML=`<b>${i===0?'Départ':bs&&i===n?'Après les bonus de fin':'Après la manche '+i}</b>`+rows.map(p=>`<div class="row between" style="gap:12px;flex-wrap:nowrap"><span class="row" style="gap:6px;flex-wrap:nowrap"><span class="dot" style="--pc:${p.color}"></span>${esc(p.name)}</span><span class="num">${fmt(cum[p.id][i])}</span></div>`).join('');
     tip.hidden=false;const bw=box.clientWidth,px=cx/W*bw;tip.style.left=Math.min(Math.max(px-tip.offsetWidth/2,0),bw-tip.offsetWidth)+'px'};
   const hide=()=>{tip.hidden=true;cross.setAttribute('visibility','hidden')};
   svg.addEventListener('pointermove',show);svg.addEventListener('pointerdown',show);svg.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')hide()});
@@ -687,12 +697,12 @@ function azEditor(g,d){
   const list=g.rounds.slice(0,idx).concat([d.data]);const run=azRun(g,list);const det=run[idx].det[active];const sc=roundScores(g,d.data);
   const has=(r,c)=>pr.place.some(([a,b])=>a===r&&b===c);
   const cells=[];for(let r=0;r<5;r++)for(let c=0;c<5;c++){const col=AZ_COLS[azColor(r,c)].c,old=before[r][c],now=has(r,c);
-    cells.push(`<button class="az-cell ${old?'old':now?'new':''}" style="--tc:${col}" ${old?'disabled':''} data-a="az-cell" data-r="${r}" data-c="${c}" aria-label="${AZ_COLS[azColor(r,c)].n} ligne ${r+1}"></button>`)}
+    cells.push(`<button class="az-cell ${old?'old':now?'new':''}" style="--tc:${col};background-image:${azMotif(azColor(r,c),!(old||now))}" ${old?'disabled':''} data-a="az-cell" data-r="${r}" data-c="${c}" aria-label="${AZ_COLS[azColor(r,c)].n} ligne ${r+1}"></button>`)}
   const fl=toInt(pr.floor);
   return `${playerTabs(g,d,id=>sc.scores[id])}
   <div class="card"><div class="row between"><p class="eyebrow">Mur de ${esc(g.players.find(p=>p.id===active).name)}</p><span class="scorebig ${sc.scores[active]<0?'neg':''}">${fmt(sc.scores[active])}</span></div>
     <div class="azwall">${cells.join('')}</div>
-    <p class="small muted az-det">${det.tiles.length?'Tuiles : '+det.tiles.map(v=>'+'+v).join(' '):'Touche les tuiles posées sur le mur cette manche'}${det.pen?` · Plancher −${det.pen}`:''}${det.bonus?` · <b style="color:var(--good)">Bonus de fin +${det.bonus}</b>`:''}</p>
+    <p class="small muted az-det">${det.tiles.length?'Tuiles : '+det.tiles.map(v=>'+'+v).join(' '):'Touche les tuiles posées sur le mur cette manche'}${det.pen?` · Plancher −${det.pen}`:''}</p>
     <div class="row between"><div><b>Plancher</b><span class="small muted" style="display:block">Tuiles cassées, jeton premier joueur compris</span></div>
       <span class="stepper"><button class="icon-btn" data-a="az-floor" data-d="-1" aria-label="Moins">−</button><span class="num" style="min-width:1.4ch;text-align:center">${fl}</span><button class="icon-btn" data-a="az-floor" data-d="1" aria-label="Plus">+</button></span></div>
   </div>`;
