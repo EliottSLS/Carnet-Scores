@@ -150,7 +150,7 @@ table.scores{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nu
 .progress span{display:block;height:100%;background:var(--accent);border-radius:99px}
 
 /* Saisie */
-.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:3px 3px 6px;margin:-3px -3px 0;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex:none;display:flex;flex-direction:column;align-items:flex-start;padding:8px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);min-width:92px}
 .tab.on{border-color:var(--accent);background:var(--accent-soft)}
@@ -285,7 +285,7 @@ body[data-theme="sevenw"] .eyebrow,body[data-theme="lostcities"] .eyebrow{letter
   .enter .ch-line{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1s .15s ease-out forwards}
   .enter .chart circle{animation:popin .35s 1.05s both}
   .enter .banner{animation:popin .5s .1s cubic-bezier(.3,1.4,.5,1) both}
-  .pop{animation:pop .3s cubic-bezier(.3,1.6,.5,1)}
+  .pop{animation:pop .22s ease-out}
   tr.flash td{animation:flash 1.4s ease-out}
   tfoot.bump td{animation:flash 1.4s .2s ease-out}
   .yay{display:inline-block;animation:wiggle .6s ease-in-out}
@@ -297,7 +297,7 @@ body[data-theme="sevenw"] .eyebrow,body[data-theme="lostcities"] .eyebrow{letter
 @keyframes rise{from{opacity:.4;transform:translateY(8px)}}
 @keyframes grow{from{transform:scaleY(0)}}
 @keyframes popin{from{opacity:0;transform:scale(.6)}}
-@keyframes pop{50%{transform:scale(1.12)}}
+@keyframes pop{50%{transform:scale(1.04)}}
 @keyframes draw{to{stroke-dashoffset:0}}
 @keyframes flash{from{background:color-mix(in srgb,var(--accent) 28%,var(--surface))}}
 @keyframes wiggle{25%{transform:rotate(-6deg) scale(1.1)}75%{transform:rotate(6deg) scale(1.1)}}
