@@ -321,6 +321,29 @@ table.scores{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nu
 @media (prefers-reduced-motion:reduce){.rv-row{transition:none}}
 .chooser .btn:not(.primary){background:#1b1f2c;border-color:#323a52;color:#f1f3fa}
 /* Révélation Azul */
+.bz-board{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:16px;max-width:560px;width:100%;margin:0 auto}
+.bzc-grid{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:8px}
+.bzc{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 6px;border-radius:16px;background:#171b27;border:1.5px solid color-mix(in srgb,var(--pc) 55%,#2a3044);min-width:0}
+.bzc-n{color:#f1f3fa;font-family:var(--f-display);max-width:100%}
+.bzc-t{font-family:var(--f-display);font-weight:800;font-size:2rem;color:#f1f3fa;font-variant-numeric:tabular-nums;transition:color .4s 1.8s,text-shadow .4s 1.8s}
+.bzc-t.lead{color:#ffc22e;text-shadow:0 0 18px rgba(255,194,46,.55)}
+.bzc-chips{display:flex;flex-direction:column;gap:4px;width:100%;min-height:84px}
+.bzc-chip{font-size:.9rem;color:#cfd5e6;background:#1f2434;border-radius:8px;padding:4px 8px;display:flex;align-items:center;justify-content:space-between;gap:4px}
+.bzc-chip svg{width:16px;height:16px;color:var(--pc);flex:none}
+.bzc-chip b{color:#7bd94c}
+.az-leg{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;color:#aab2c8}
+.az-leg span{display:inline-flex;align-items:center;gap:5px}
+.az-leg svg{width:14px;height:14px;color:#aab2c8}
+.bzc-chip.zero{opacity:.4}.bzc-chip.zero b{color:#aab2c8}
+@media (max-width:360px){.bzc-t{font-size:1.6rem}}
+@media (prefers-reduced-motion:no-preference){
+  .bzc.drum{animation:drum .12s linear 8}
+  .bzc-chip.fresh{animation:chipin .45s 1s cubic-bezier(.3,1.5,.5,1) both}
+  .bzc-t.pop{animation:pop .4s cubic-bezier(.3,1.6,.5,1)}
+}
+@keyframes drum{25%{transform:translateY(-2px) rotate(-1deg)}75%{transform:translateY(2px) rotate(1deg)}}
+@keyframes chipin{from{opacity:0;transform:scale(.4)}}
+
 .rv-sub{color:#aab2c8;text-align:center;font-weight:700;margin:0 0 4px}
 .bz-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;max-width:460px;width:100%;margin:0 auto}
 .bz-name{font-family:var(--f-display);font-size:1.6rem;color:#f1f3fa}
@@ -901,30 +924,32 @@ V.stats=()=>{
   ${podium}${awards}${ft?statTable(ft,P,ranked,who):''}`
   :`<div class="card"><p class="muted">Aucune partie terminée pour l'instant.</p></div>`}`;
 };
+const AZ_CATS=[{k:'rows',n:'Lignes',u:2,ic:'<svg viewBox="0 0 24 24"><rect x="2" y="9" width="20" height="6" rx="2" fill="currentColor"/></svg>'},{k:'cols',n:'Colonnes',u:7,ic:'<svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="20" rx="2" fill="currentColor"/></svg>'},{k:'colors',n:'Couleurs',u:10,ic:'<svg viewBox="0 0 24 24"><rect x="2" y="2" width="8" height="8" rx="2" fill="#2a6fdb"/><rect x="14" y="2" width="8" height="8" rx="2" fill="#f2b62b"/><rect x="2" y="14" width="8" height="8" rx="2" fill="#d8433b"/><rect x="14" y="14" width="8" height="8" rx="2" fill="#36c2c4"/></svg>'}];
 function azReveal(g){
-  const fb=azFinal(g),t=totals(g),pre=id=>t[id]-fb[id].pts,end=endState(g);
-  const order=[...g.players].sort((a,b)=>pre(a.id)-pre(b.id));const n=order.length,step=UI.revealStep||0;
+  const fb=azFinal(g),t=totals(g),pre=id=>t[id]-fb[id].pts,end=endState(g);const step=UI.revealStep||0;
   const head=`<div class="ch-bar"><span class="eyebrow" style="color:#aab2c8">Azul · Bonus de fin</span></div>`;
-  if(step===0){return `<div class="chooser reveal az-rv">${head}<div class="rv-list"><p class="rv-sub">Avant les bonus</p>${[...order].reverse().map((p,i)=>`<div class="rv-row in" style="--pc:${p.color}"><span class="rv-rank">${i+1}</span><span class="avatar" style="--pc:${p.color}">${avt(p)}</span><b class="grow ellipsis">${esc(p.name)}</b><span class="rv-score">${pre(p.id)}</span></div>`).join('')}</div>
-    <div class="rv-foot"><p class="small" style="color:#aab2c8;text-align:center">Lignes +2 · Colonnes +7 · Couleurs +10</p><button class="btn primary" data-a="reveal-next">Compter les bonus</button></div></div>`}
-  if(step<=n){const p=order[step-1],b=fb[p.id];
-    const line=(lbl,cnt,unit,icon,k)=>`<div class="bz-line ${cnt?'':'zero'}" style="animation-delay:${.35+k*.55}s"><span class="bz-ic">${icon}</span><span class="grow">${lbl}</span><span class="bz-x">${cnt} × ${unit}</span><b class="bz-v">+${cnt*unit}</b></div>`;
-    const ic={row:`<svg viewBox="0 0 24 24"><rect x="2" y="9" width="20" height="6" rx="2"/></svg>`,col:`<svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="20" rx="2"/></svg>`,
-      clr:`<svg viewBox="0 0 24 24"><rect x="2" y="2" width="8" height="8" rx="2" fill="#2a6fdb"/><rect x="14" y="2" width="8" height="8" rx="2" fill="#f2b62b"/><rect x="2" y="14" width="8" height="8" rx="2" fill="#d8433b"/><rect x="14" y="14" width="8" height="8" rx="2" fill="#36c2c4"/></svg>`};
-    return `<div class="chooser reveal az-rv">${head}<div class="bz-card" style="--pc:${p.color}" data-step="${step}">
-      <span class="avatar xl" style="--pc:${p.color}">${avt(p)}</span><b class="bz-name">${esc(p.name)}</b>
-      <div class="bz-lines">${line('Lignes complètes',b.rows,2,ic.row,0)}${line('Colonnes complètes',b.cols,7,ic.col,1)}${line('Couleurs complètes',b.colors,10,ic.clr,2)}</div>
-      <div class="bz-total"><span class="small" style="color:#aab2c8">Total</span><span class="duel-score" id="bz-total" data-from="${pre(p.id)}" data-to="${t[p.id]}">${pre(p.id)}</span><span class="bz-gain" style="animation-delay:${.35+3*.55}s">+${b.pts}</span></div></div>
-      <div class="rv-foot"><button class="btn ${step===n?'primary':''}" data-a="reveal-next">${step===n?'Classement final':'Joueur suivant'}</button></div></div>`}
+  if(step<=3){
+    const upto=(id,k)=>pre(id)+AZ_CATS.slice(0,k).reduce((s,c)=>s+fb[id][c.k]*c.u,0);
+    const now=id=>upto(id,step),before=id=>upto(id,Math.max(0,step-1));
+    const best=Math.max(...g.players.map(p=>now(p.id)));
+    const cards=g.players.map(p=>`<div class="bzc ${step?'drum':''}" style="--pc:${p.color}">
+      <span class="avatar big" style="--pc:${p.color}">${avt(p)}</span><b class="ellipsis bzc-n">${esc(p.name)}</b>
+      <span class="bzc-t ${step&&now(p.id)===best?'lead':''}" ${step?`data-from="${before(p.id)}" data-to="${now(p.id)}"`:''}>${step?before(p.id):pre(p.id)}</span>
+      <div class="bzc-chips">${AZ_CATS.slice(0,step).map((c,i)=>{const v=fb[p.id][c.k]*c.u;return `<span class="bzc-chip ${v?'':'zero'} ${i===step-1?'fresh':''}" title="${c.n}">${c.ic}<b>+${v}</b></span>`}).join('')}</div></div>`).join('');
+    const label=['Révéler les lignes','Révéler les colonnes','Révéler les couleurs','Classement final'][step];
+    return `<div class="chooser reveal az-rv">${head}<div class="bz-board"><p class="rv-sub">${step?`${AZ_CATS[step-1].n} complètes : +${AZ_CATS[step-1].u} chacune`:'Scores avant les bonus'}</p><div class="bzc-grid" style="--n:${g.players.length}">${cards}</div></div>
+      <div class="rv-foot">${step===0?`<p class="small az-leg">${AZ_CATS.map(c=>`<span>${c.ic}${c.n} +${c.u}</span>`).join('')}</p>`:''}<button class="btn primary" data-a="reveal-next">${label}</button></div></div>`}
   const fin=[...g.players].sort((a,b)=>(end.winners.includes(b.id)-end.winners.includes(a.id))||t[b.id]-t[a.id]);
   return `<div class="chooser reveal az-rv duel-wrap ph2">${head}<div class="rv-list">${fin.map((p,i)=>{const w=end.winners.includes(p.id);return `<div class="rv-row in ${w?'first az-win':''}" style="--pc:${p.color};animation-delay:${(fin.length-i)*.25}s">${w?'<span class="rays"></span>':''}<span class="rv-rank">${i+1}</span><span class="avatar" style="--pc:${p.color}">${avt(p)}</span><b class="grow ellipsis">${esc(p.name)}</b><span class="rv-score">${t[p.id]}</span></div>`}).join('')}</div>
     <div class="rv-foot"><p class="rv-win">${end.winners.map(id=>esc(g.players.find(p=>p.id===id).name)).join(' et ')} ${end.winners.length>1?'gagnent':'gagne'} !</p><button class="btn primary" data-a="reveal-done">Voir le détail</button></div></div>`;
 }
-function azRevealFx(g){const n=g.players.length,step=UI.revealStep||0;
-  if(step>=1&&step<=n){const el=document.getElementById('bz-total');if(!el)return;const from=+el.dataset.from,to=+el.dataset.to;const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const go=()=>{if(reduce){el.textContent=to;return}const t0=performance.now(),d=900;const f=now=>{const k=Math.min(1,(now-t0)/d);el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f);else if(to>from)el.classList.add('pop')};requestAnimationFrame(f)};
-    setTimeout(go,reduce?0:2000)}
-  if(step===n+1&&!UI.azCele){UI.azCele=true;setTimeout(()=>{confetti();try{fanfare()}catch(_){}},400)}}
+function azRevealFx(g){const step=UI.revealStep||0;const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(step>=1&&step<=3){const btn=document.querySelector('[data-a="reveal-next"]');if(btn&&!reduce){btn.disabled=true;setTimeout(()=>btn.disabled=false,1900)}
+    document.querySelectorAll('[data-from]').forEach(el=>{const from=+el.dataset.from,to=+el.dataset.to;
+      const go=()=>{if(reduce||from===to){el.textContent=to;if(to>from)el.classList.add('pop');return}const t0=performance.now(),d=800;const f=now=>{const k=Math.min(1,(now-t0)/d);el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f);else el.classList.add('pop')};requestAnimationFrame(f)};
+      setTimeout(go,reduce?0:1000)});
+    if(!reduce)setTimeout(()=>{try{tick()}catch(_){}},1000)}
+  if(step===4&&!UI.azCele){UI.azCele=true;setTimeout(()=>{confetti();try{fanfare()}catch(_){}},400)}}
 V.reveal=()=>{
   if(gameById(UI.gameId).type==='azul')return azReveal(gameById(UI.gameId));
   const g=gameById(UI.gameId);const t=totals(g);const r=g.rounds[0];const co=id=>toInt((r.sheet[id]||{}).coins);
