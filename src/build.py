@@ -165,7 +165,7 @@ OUT.mkdir(exist_ok=True)
   ]}, ensure_ascii=False, indent=2))
 
 import hashlib
-ver = hashlib.sha1(html.encode()).hexdigest()[:8]
+ver = hashlib.sha1(html.encode()+b''.join((OUT/f).read_bytes() for f in ['icon-180.png','icon-192.png','icon-512.png','icon-maskable-512.png'] if (OUT/f).exists())).hexdigest()[:8]
 (OUT / 'sw.js').write_text(f"""// Carnet de Scores — fonctionnement hors ligne
 const V='carnet-{ver}';
 const SHELL=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-180.png'];
