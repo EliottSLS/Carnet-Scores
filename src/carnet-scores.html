@@ -319,6 +319,27 @@ table.scores{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nu
 .rv-foot .btn{min-width:200px}
 .rv-win{font-family:var(--f-display);font-weight:800;font-size:1.6rem;color:#f1f3fa;text-align:center;margin:0}
 @media (prefers-reduced-motion:reduce){.rv-row{transition:none}}
+.chooser .btn:not(.primary){background:#1b1f2c;border-color:#323a52;color:#f1f3fa}
+/* Révélation Azul */
+.rv-sub{color:#aab2c8;text-align:center;font-weight:700;margin:0 0 4px}
+.bz-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;max-width:460px;width:100%;margin:0 auto}
+.bz-name{font-family:var(--f-display);font-size:1.6rem;color:#f1f3fa}
+.bz-lines{display:flex;flex-direction:column;gap:10px;width:100%}
+.bz-line{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:#171b27;border:1.5px solid color-mix(in srgb,var(--pc) 60%,#2a3044);color:#f1f3fa}
+.bz-line.zero{opacity:.35;border-color:#2a3044}
+.bz-ic svg{width:24px;height:24px;fill:var(--pc);display:block}
+.bz-x{color:#aab2c8;font-variant-numeric:tabular-nums}
+.bz-v{font-family:var(--f-display);font-size:1.3rem;min-width:3ch;text-align:right;font-variant-numeric:tabular-nums}
+.bz-total{display:flex;align-items:baseline;gap:12px;margin-top:6px}
+.bz-gain{font-family:var(--f-display);font-weight:800;font-size:1.3rem;color:#7bd94c}
+.az-win{position:relative;overflow:visible}
+@media (prefers-reduced-motion:no-preference){
+  .bz-line,.bz-gain{animation:slidein .45s cubic-bezier(.3,1.4,.5,1) both}
+  .bz-card .avatar.xl{animation:popin .5s cubic-bezier(.3,1.5,.5,1) both}
+  .az-rv .rv-list .rv-row.in{animation:popin .45s cubic-bezier(.3,1.4,.5,1) both}
+  #bz-total.pop{animation:pop .4s cubic-bezier(.3,1.6,.5,1)}
+}
+@keyframes slidein{from{opacity:0;transform:translateX(-24px)}}
 /* Face-à-face */
 .duel{flex:1;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;padding:16px;max-width:560px;width:100%;margin:0 auto;position:relative}
 .duel-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;padding:22px 10px;border-radius:20px;background:#171b27;border:1.5px solid #2a3044;min-width:0;transition:transform .7s cubic-bezier(.2,.9,.3,1.3),opacity .7s,filter .7s,box-shadow .7s;overflow:visible}
@@ -462,6 +483,8 @@ function swCat(sh,c){sh=sh||{};if(c.sci)return sciScore(sh.sci);const v=toInt(sh
 function swTotal(g,sh){return swCats(g).reduce((t,c)=>t+swCat(sh,c),0)}
 function isLow(g){return g.type==='skyjo'}
 function azFinal(g){if(g.type!=='azul'||!g.rounds.length)return null;const run=azRun(g,g.rounds);const k=run.findIndex(x=>x.ended);if(k<0)return null;const o={};g.players.forEach(p=>o[p.id]=run[k].det[p.id].b);return o}
+const azHidden=g=>g.type==='azul'&&g.status!=='done'&&!g.revealed;
+const azShown=g=>azHidden(g)?null:azFinal(g);
 function totals(g){const t={};g.players.forEach(p=>t[p.id]=0);g.rounds.forEach(r=>{const{scores}=roundScores(g,r);for(const id in scores)t[id]+=scores[id]});const fb=azFinal(g);if(fb)for(const id in fb)t[id]+=fb[id].pts;return t}
 function endState(g){
   const t=totals(g),ids=g.players.map(p=>p.id),vals=ids.map(i=>t[i]);
@@ -564,14 +587,14 @@ function scoreTable(g,editable){
   const best=g.rounds.length?(isLow(g)?Math.min(...vals):Math.max(...vals)):null;
   return `<div class="scroll-x"><table class="scores"><thead><tr><th>Manche</th>${g.players.map(p=>`<th><span class="row" style="gap:6px;justify-content:center;flex-wrap:nowrap"><span class="dot" style="--pc:${p.color}"></span>${esc(p.name)}</span></th>`).join('')}</tr></thead>
   <tbody>${g.rounds.map((r,i)=>{const{scores,meta}=roundScores(g,r);return `<tr class="${UI.flash===i?'flash':''}" ${editable?`data-a="edit-round" data-i="${i}"`:''}><td>${i+1}${editable?' ✎':''}</td>${g.players.map(p=>`<td class="${scores[p.id]<0?(isLow(g)?'goodnum':'neg'):''}">${fmt(scores[p.id])}${meta[p.id]?`<span class="tag ${meta[p.id]==='Flip 7'||/bonus/.test(meta[p.id])?'good':''}">${meta[p.id]}</span>`:''}</td>`).join('')}</tr>`}).join('')||`<tr><td colspan="${g.players.length+1}" class="muted" style="text-align:center;font-family:var(--f-body);font-weight:400">Aucune manche pour l'instant</td></tr>`}
-  ${(()=>{const fb=azFinal(g);return fb?`<tr class="az-bonus"><td>Bonus</td>${g.players.map(p=>`<td title="${fb[p.id].rows} ligne(s), ${fb[p.id].cols} colonne(s), ${fb[p.id].colors} couleur(s)">+${fb[p.id].pts}</td>`).join('')}</tr>`:''})()}</tbody>
-  <tfoot class="${UI.flash!=null?'bump':''}"><tr><td>Total</td>${g.players.map(p=>`<td class="${best!==null&&t[p.id]===best?'lead':''}">${fmt(t[p.id])}</td>`).join('')}</tr></tfoot></table></div>`;
+  ${(()=>{const fb=azShown(g);return fb?`<tr class="az-bonus"><td>Bonus</td>${g.players.map(p=>`<td title="${fb[p.id].rows} ligne(s), ${fb[p.id].cols} colonne(s), ${fb[p.id].colors} couleur(s)">+${fb[p.id].pts}</td>`).join('')}</tr>`:''})()}</tbody>
+  <tfoot class="${UI.flash!=null?'bump':''}"><tr><td>Total</td>${g.players.map(p=>azHidden(g)&&azFinal(g)?`<td class="muted">?</td>`:`<td class="${best!==null&&t[p.id]===best?'lead':''}">${fmt(t[p.id])}</td>`).join('')}</tr></tfoot></table></div>`;
 }
 function niceStep(range){const raw=range/4;const p=Math.pow(10,Math.floor(Math.log10(raw||1)));const f=raw/p;return (f<=1?1:f<=2?2:f<=5?5:10)*p}
 function chartData(g){
   const cum={};g.players.forEach(p=>cum[p.id]=[0]);
   g.rounds.forEach(r=>{const{scores}=roundScores(g,r);g.players.forEach(p=>{const a=cum[p.id];a.push(a[a.length-1]+scores[p.id])})});
-  const fb=azFinal(g);if(fb)g.players.forEach(p=>{const a=cum[p.id];a.push(a[a.length-1]+fb[p.id].pts)});
+  const fb=azShown(g);if(fb)g.players.forEach(p=>{const a=cum[p.id];a.push(a[a.length-1]+fb[p.id].pts)});
   return cum;
 }
 function swTable(g,editable,hidden){
@@ -583,7 +606,7 @@ function swTable(g,editable,hidden){
 }
 function scoreChart(g){
   if(!g.rounds.length||g.type==='sevenw')return '';
-  const cum=chartData(g),n=cum[g.players[0].id].length-1,bonusStep=!!azFinal(g);
+  const cum=chartData(g),n=cum[g.players[0].id].length-1,bonusStep=!!azShown(g);
   const all=g.players.flatMap(p=>cum[p.id]);
   const target=g.type==='skyjo'?100:g.type==='flip7'?200:null;
   let lo=Math.min(0,...all),hi=Math.max(1,...all);
@@ -610,7 +633,7 @@ function attachChart(){
   const tip=document.getElementById('ch-tip'),cross=document.getElementById('ch-x'),svg=box.querySelector('svg');
   const show=e=>{const r=e.target.closest('rect[data-i]');if(!r)return;const i=+r.dataset.i;
     const pt=svg.createSVGPoint();const rx=+r.getAttribute('x')+(+r.getAttribute('width'))/2;
-    const n=cum[g.players[0].id].length-1,bs=!!azFinal(g);const W=340,L=36,R=g.players.length<=4?62:14;const cx=L+(n?i/n:0)*(W-L-R);
+    const n=cum[g.players[0].id].length-1,bs=!!azShown(g);const W=340,L=36,R=g.players.length<=4?62:14;const cx=L+(n?i/n:0)*(W-L-R);
     cross.setAttribute('x1',cx);cross.setAttribute('x2',cx);cross.setAttribute('visibility','visible');
     const rows=[...g.players].sort((a,b)=>isLow(g)?cum[a.id][i]-cum[b.id][i]:cum[b.id][i]-cum[a.id][i]);
     tip.innerHTML=`<b>${i===0?'Départ':bs&&i===n?'Après les bonus de fin':'Après la manche '+i}</b>`+rows.map(p=>`<div class="row between" style="gap:12px;flex-wrap:nowrap"><span class="row" style="gap:6px;flex-wrap:nowrap"><span class="dot" style="--pc:${p.color}"></span>${esc(p.name)}</span><span class="num">${fmt(cum[p.id][i])}</span></div>`).join('');
@@ -623,7 +646,7 @@ function ranking(g,t){return [...g.players].sort((a,b)=>isLow(g)?t[a.id]-t[b.id]
 
 V.game=()=>{
   const g=gameById(UI.gameId);if(!g){UI.view='home';return V.home()}
-  const done=g.status==='done';const hidden=g.type==='sevenw'&&!done&&g.rounds.length&&!g.revealed;const end=done||hidden?null:endState(g);const t=totals(g);
+  const done=g.status==='done';const hidden=(g.type==='sevenw'&&!done&&g.rounds.length&&!g.revealed)||(azHidden(g)&&!!azFinal(g));const end=done||hidden?null:endState(g);const t=totals(g);
   const target=g.type==='skyjo'?100:g.type==='flip7'?200:null;
   let progress='';
   if(target&&!done){const top=Math.max(...g.players.map(p=>t[p.id]),0);progress=`<div class="stack" style="gap:6px"><div class="row between small"><span class="muted">${g.type==='skyjo'?'Plus haut total':'Meneur'}</span><span class="num">${top} / ${target}</span></div><div class="progress"><span style="width:${Math.min(100,top/target*100)}%"></span></div></div>`}
@@ -634,7 +657,7 @@ V.game=()=>{
   ${progress}
   ${end?`<div class="banner"><h2>${end.winners.length>1?'Égalité : ':''}${winnersTxt(end.winners)} ${end.winners.length>1?'gagnent':'gagne'} !</h2>${end.coinTie?'<p class="small"><b>Égalité de points, départagée au trésor.</b></p>':''}<button class="btn primary" data-a="finish">Enregistrer dans l'historique</button></div>`:''}
   ${done?`<div class="card"><p class="eyebrow">Classement</p><div class="list">${ranking(g,t).map((p,i)=>`<div><span class="num" style="width:1.6ch;color:var(--ink-soft)">${i+1}</span><span class="avatar" style="--pc:${p.color}">${avt(p)}</span><b class="grow ellipsis">${esc(p.name)}${g.winners.includes(p.id)?' 🏆':''}</b><span class="num" style="font-size:1.2rem">${fmt(t[p.id])}</span></div>`).join('')}</div></div>`:''}
-  ${hidden?`<div class="banner reveal-cta"><h2>Tous les scores sont saisis</h2><button class="btn primary" data-a="reveal">Révéler le classement</button></div>`:''}
+  ${hidden?`<div class="banner reveal-cta"><h2>${g.type==='azul'?'Un mur a une ligne complète !':'Tous les scores sont saisis'}</h2><button class="btn primary" data-a="reveal">${g.type==='azul'?'Révéler les bonus de fin':'Révéler le classement'}</button></div>`:''}
   ${g.type==='sevenw'?swTable(g,!done,hidden):scoreTable(g,!done)}
   ${!done&&!g.rounds.length&&g.type!=='skyjo'?`<button class="btn block who-btn" data-a="wheel" data-src="game">Qui commence ? Tirer au sort</button>`:''}
   ${!done&&!end&&!hidden?`<button class="btn primary block" data-a="new-round">${g.type==='sevenw'?'Saisir le décompte final':'Saisir la manche '+(g.rounds.length+1)}</button>`:''}
@@ -878,7 +901,32 @@ V.stats=()=>{
   ${podium}${awards}${ft?statTable(ft,P,ranked,who):''}`
   :`<div class="card"><p class="muted">Aucune partie terminée pour l'instant.</p></div>`}`;
 };
+function azReveal(g){
+  const fb=azFinal(g),t=totals(g),pre=id=>t[id]-fb[id].pts,end=endState(g);
+  const order=[...g.players].sort((a,b)=>pre(a.id)-pre(b.id));const n=order.length,step=UI.revealStep||0;
+  const head=`<div class="ch-bar"><span class="eyebrow" style="color:#aab2c8">Azul · Bonus de fin</span></div>`;
+  if(step===0){return `<div class="chooser reveal az-rv">${head}<div class="rv-list"><p class="rv-sub">Avant les bonus</p>${[...order].reverse().map((p,i)=>`<div class="rv-row in" style="--pc:${p.color}"><span class="rv-rank">${i+1}</span><span class="avatar" style="--pc:${p.color}">${avt(p)}</span><b class="grow ellipsis">${esc(p.name)}</b><span class="rv-score">${pre(p.id)}</span></div>`).join('')}</div>
+    <div class="rv-foot"><p class="small" style="color:#aab2c8;text-align:center">Lignes +2 · Colonnes +7 · Couleurs +10</p><button class="btn primary" data-a="reveal-next">Compter les bonus</button></div></div>`}
+  if(step<=n){const p=order[step-1],b=fb[p.id];
+    const line=(lbl,cnt,unit,icon,k)=>`<div class="bz-line ${cnt?'':'zero'}" style="animation-delay:${.35+k*.55}s"><span class="bz-ic">${icon}</span><span class="grow">${lbl}</span><span class="bz-x">${cnt} × ${unit}</span><b class="bz-v">+${cnt*unit}</b></div>`;
+    const ic={row:`<svg viewBox="0 0 24 24"><rect x="2" y="9" width="20" height="6" rx="2"/></svg>`,col:`<svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="20" rx="2"/></svg>`,
+      clr:`<svg viewBox="0 0 24 24"><rect x="2" y="2" width="8" height="8" rx="2" fill="#2a6fdb"/><rect x="14" y="2" width="8" height="8" rx="2" fill="#f2b62b"/><rect x="2" y="14" width="8" height="8" rx="2" fill="#d8433b"/><rect x="14" y="14" width="8" height="8" rx="2" fill="#36c2c4"/></svg>`};
+    return `<div class="chooser reveal az-rv">${head}<div class="bz-card" style="--pc:${p.color}" data-step="${step}">
+      <span class="avatar xl" style="--pc:${p.color}">${avt(p)}</span><b class="bz-name">${esc(p.name)}</b>
+      <div class="bz-lines">${line('Lignes complètes',b.rows,2,ic.row,0)}${line('Colonnes complètes',b.cols,7,ic.col,1)}${line('Couleurs complètes',b.colors,10,ic.clr,2)}</div>
+      <div class="bz-total"><span class="small" style="color:#aab2c8">Total</span><span class="duel-score" id="bz-total" data-from="${pre(p.id)}" data-to="${t[p.id]}">${pre(p.id)}</span><span class="bz-gain" style="animation-delay:${.35+3*.55}s">+${b.pts}</span></div></div>
+      <div class="rv-foot"><button class="btn ${step===n?'primary':''}" data-a="reveal-next">${step===n?'Classement final':'Joueur suivant'}</button></div></div>`}
+  const fin=[...g.players].sort((a,b)=>(end.winners.includes(b.id)-end.winners.includes(a.id))||t[b.id]-t[a.id]);
+  return `<div class="chooser reveal az-rv duel-wrap ph2">${head}<div class="rv-list">${fin.map((p,i)=>{const w=end.winners.includes(p.id);return `<div class="rv-row in ${w?'first az-win':''}" style="--pc:${p.color};animation-delay:${(fin.length-i)*.25}s">${w?'<span class="rays"></span>':''}<span class="rv-rank">${i+1}</span><span class="avatar" style="--pc:${p.color}">${avt(p)}</span><b class="grow ellipsis">${esc(p.name)}</b><span class="rv-score">${t[p.id]}</span></div>`}).join('')}</div>
+    <div class="rv-foot"><p class="rv-win">${end.winners.map(id=>esc(g.players.find(p=>p.id===id).name)).join(' et ')} ${end.winners.length>1?'gagnent':'gagne'} !</p><button class="btn primary" data-a="reveal-done">Voir le détail</button></div></div>`;
+}
+function azRevealFx(g){const n=g.players.length,step=UI.revealStep||0;
+  if(step>=1&&step<=n){const el=document.getElementById('bz-total');if(!el)return;const from=+el.dataset.from,to=+el.dataset.to;const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const go=()=>{if(reduce){el.textContent=to;return}const t0=performance.now(),d=900;const f=now=>{const k=Math.min(1,(now-t0)/d);el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(f);else if(to>from)el.classList.add('pop')};requestAnimationFrame(f)};
+    setTimeout(go,reduce?0:2000)}
+  if(step===n+1&&!UI.azCele){UI.azCele=true;setTimeout(()=>{confetti();try{fanfare()}catch(_){}},400)}}
 V.reveal=()=>{
+  if(gameById(UI.gameId).type==='azul')return azReveal(gameById(UI.gameId));
   const g=gameById(UI.gameId);const t=totals(g);const r=g.rounds[0];const co=id=>toInt((r.sheet[id]||{}).coins);
   const order=[...g.players].sort((a,b)=>t[a.id]-t[b.id]||co(a.id)-co(b.id));const n=order.length,step=UI.revealStep||0;
   const end=endState(g);
@@ -961,6 +1009,7 @@ function render(){
   document.getElementById('t-home').classList.toggle('on',tabView==='home'&&!(UI.view==='game'&&gameById(UI.gameId)?.status==='done'));
   document.getElementById('tabbar').hidden=UI.view==='chooser'||UI.view==='reveal'||UI.view==='wheel';
   if(UI.view==='chooser')initChooser();
+  if(UI.view==='reveal'){const rg=gameById(UI.gameId);if(rg&&rg.type==='azul')azRevealFx(rg)}
   if(UI.view==='reveal'&&UI.duel===2){countUp();if(!UI.duelCele){UI.duelCele=true;setTimeout(()=>confetti(),300)}}
   if(UI.view==='game'){const g=gameById(UI.gameId);UI.cele=UI.cele||{};if(g&&$app.querySelector('.banner:not(.reveal-cta)')&&!UI.cele[g.id]){UI.cele[g.id]=true;setTimeout(()=>confetti(),250)}}
   if(UI.view==='game')attachChart();
@@ -978,7 +1027,7 @@ A.nav=d=>go(d.v);
 A.setup=d=>{const G=GAMES[d.type];go('setup',{setup:{type:d.type,variant:d.variant,selected:[],nRounds:3,exp:(UI.lastExp||[]).slice()}});};
 A['sw-jk-n']=d=>{const sh=UI.draft.data.sheet[UI.draft.tab];sh.sci=sh.sci||{};const jk=sh.sci.jk||(sh.sci.jk=[]);if(+d.d>0&&jk.length<4)jk.push(null);else if(+d.d<0)jk.pop();delete sh.sci.j;render()};
 A['sw-jk']=d=>{const sh=UI.draft.data.sheet[UI.draft.tab];sh.sci.jk[+d.i]=sh.sci.jk[+d.i]===d.s?null:d.s;render()};
-A.reveal=()=>go('reveal',{revealStep:0,duel:0});
+A.reveal=()=>go('reveal',{revealStep:0,duel:0,azCele:false});
 let duelTimer=null;
 A.duel=()=>{UI.duel=1;UI.duelCele=false;UI.duelSwap=Math.random()<.5;render();clearTimeout(duelTimer);duelTimer=setTimeout(()=>{if(UI.view==='reveal'&&UI.duel===1){UI.duel=2;render();try{navigator.vibrate&&navigator.vibrate([60,40,120])}catch(_){}}},2800)};
 A['reveal-next']=()=>{UI.revealStep=(UI.revealStep||0)+1;render()};
