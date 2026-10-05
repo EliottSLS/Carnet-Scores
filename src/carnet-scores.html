@@ -67,12 +67,28 @@ textarea{min-height:120px;font-family:ui-monospace,Menlo,monospace;font-size:.8r
 
 /* En-tête */
 .top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-left:8px}
-.top .date{font-family:var(--f-display);color:var(--accent);font-weight:500}
+.top .date{font-family:var(--f-display);color:var(--accent);font-weight:500;white-space:nowrap;font-size:.95rem}
 
 /* Jeux */
 .games{display:grid;gap:12px}
-.game{position:relative;overflow:hidden;padding-left:22px}
-.game::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:var(--gc)}
+.game,.ghead{position:relative;overflow:hidden;border-radius:18px;color:var(--th-ink);background:var(--th-bg);box-shadow:var(--shadow)}
+.game{display:block;width:100%;text-align:left;min-height:104px;padding:18px 16px}
+.game-txt,.ghead-txt{position:relative;z-index:1;max-width:62%;display:flex;flex-direction:column;gap:4px}
+.game h2{font-size:1.45rem;font-weight:800}
+.game p,.ghead .eyebrow,.ghead-sub{color:var(--th-soft)}
+.gart{position:absolute;right:-6px;bottom:-4px;height:112%;width:auto;pointer-events:none}
+.ghead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:18px 16px;min-height:110px}
+.ghead-btn{margin:-6px 0 6px -6px}
+.ghead .btn.ghost{background:var(--th-btn);color:var(--th-ink);border-radius:999px;min-height:34px;padding:0 14px;font-size:.88rem}
+.ghead .btn.ghost::before{content:'← '}
+.ghead .gart{opacity:.95}
+.th-skyjo{--th-bg:linear-gradient(115deg,#1f3fa8 0%,#2b8fd6 32%,#3aa65a 56%,#f2c230 78%,#e2482f 100%);--th-ink:#fff;--th-soft:rgba(255,255,255,.82);--th-btn:rgba(0,0,0,.22)}
+.th-skyjo .game-txt h2,.th-skyjo h1{text-shadow:0 2px 10px rgba(0,0,0,.25)}
+.th-flip7{--th-bg:radial-gradient(circle at 80% 20%,#e0213f 0%,#a50f2a 55%,#6d0a1c 100%);--th-ink:#fff4dc;--th-soft:rgba(255,244,220,.78);--th-btn:rgba(0,0,0,.25)}
+.th-lostcities{--th-bg:linear-gradient(160deg,#f6e8c8 0%,#e8cf9c 100%);--th-ink:#4a3418;--th-soft:#7a5f38;--th-btn:rgba(74,52,24,.12)}
+.th-sevenw{--th-bg:linear-gradient(135deg,#2e2110 0%,#6b4f2a 100%);--th-ink:#f6e7c4;--th-soft:rgba(246,231,196,.75);--th-btn:rgba(0,0,0,.25)}
+.th-sevenw h2,.th-sevenw h1{font-family:Georgia,"Times New Roman",serif;letter-spacing:.04em}
+.th-flip7 h2,.th-flip7 h1{font-style:italic}
 .game .vars{display:flex;gap:8px;flex-wrap:wrap}
 .chip{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--border);background:var(--surface);font-weight:700;font-size:.92rem}
 .chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -231,10 +247,11 @@ table.scores{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nu
 .tabbar svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* Animations */
-.btn,.chip,.cardbtn,.icon-btn,.tab,.fin,.card.game,.resume,.chooser-cta{transition:transform .12s ease,background-color .15s,border-color .15s,color .15s}
-.btn:active,.chip:active,.cardbtn:active,.icon-btn:active,.tab:active,.fin:active,.card.game:active,.resume:active,.chooser-cta:active{transform:scale(.96)}
+.btn,.chip,.cardbtn,.icon-btn,.tab,.fin,.game,.resume,.chooser-cta{transition:transform .12s ease,background-color .15s,border-color .15s,color .15s}
+.btn:active,.chip:active,.cardbtn:active,.icon-btn:active,.tab:active,.fin:active,.game:active,.resume:active,.chooser-cta:active{transform:scale(.96)}
 .confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:80}
 @media (prefers-reduced-motion:no-preference){
+  .game .gart{transition:transform .3s}.game:active .gart{transform:rotate(-3deg) scale(1.05)}
   .enter > *{animation:rise .3s cubic-bezier(.2,.8,.2,1) both}
   .enter > *:nth-child(2){animation-delay:.04s}.enter > *:nth-child(3){animation-delay:.08s}.enter > *:nth-child(4){animation-delay:.12s}.enter > *:nth-child(5){animation-delay:.16s}.enter > *:nth-child(n+6){animation-delay:.2s}
   .enter .games > *{animation:rise .42s cubic-bezier(.2,.8,.2,1) both}
@@ -456,6 +473,12 @@ const GAMES={
   lostcities:{name:'Lost Cities',gc:'--g-lc',min:2,max:2,variants:{standard:'Standard'},rule:'Le plus gros total après les manches gagne'},
   sevenw:{name:'7 Wonders',gc:'--g-7w',min:3,max:7,variants:{base:'Base'},rule:'Décompte final · égalité départagée au trésor'}
 };
+const GAME_ART={
+ skyjo:`<svg viewBox="0 0 160 100" class="gart"><g transform="translate(70 18) rotate(-14)"><rect width="44" height="62" rx="7" fill="#1f3fa8" stroke="#fff" stroke-width="3"/><text x="22" y="40" text-anchor="middle" font-size="22" font-weight="800" fill="#fff">-2</text></g><g transform="translate(92 14) rotate(2)"><rect width="44" height="62" rx="7" fill="#f2c230" stroke="#fff" stroke-width="3"/><text x="22" y="40" text-anchor="middle" font-size="22" font-weight="800" fill="#5a3b00">5</text></g><g transform="translate(112 16) rotate(16)"><rect width="44" height="62" rx="7" fill="#e2482f" stroke="#fff" stroke-width="3"/><text x="22" y="40" text-anchor="middle" font-size="22" font-weight="800" fill="#fff">12</text></g></svg>`,
+ flip7:`<svg viewBox="0 0 160 100" class="gart"><g transform="translate(78 22) rotate(-18)"><rect width="40" height="56" rx="6" fill="#fff4dc" stroke="#ffd36a" stroke-width="2"/></g><g transform="translate(96 18) rotate(-4)"><rect width="40" height="56" rx="6" fill="#fff4dc" stroke="#ffd36a" stroke-width="2"/></g><text x="128" y="84" text-anchor="middle" font-size="86" font-weight="800" fill="none" stroke="#ffd36a" stroke-width="4" font-style="italic">7</text><circle cx="62" cy="24" r="3" fill="#ffd36a"/><circle cx="150" cy="16" r="2.5" fill="#ffd36a"/><circle cx="70" cy="80" r="2" fill="#ffd36a"/></svg>`,
+ lostcities:`<svg viewBox="0 0 160 100" class="gart"><path d="M40 100 L72 52 L92 80 L112 40 L160 100 Z" fill="#8a6a3f" opacity=".35"/><path d="M70 100 L96 64 L110 82 L128 56 L160 100 Z" fill="#6b4f2a" opacity=".45"/><g stroke-width="5" stroke-linecap="round"><path d="M118 20 V44" stroke="#e2a90a"/><path d="M128 14 V44" stroke="#2f74d0"/><path d="M138 20 V44" stroke="#8b92a3"/><path d="M148 14 V44" stroke="#3a9a46"/><path d="M108 14 V44" stroke="#d43f37"/></g><circle cx="78" cy="26" r="13" fill="none" stroke="#6b4f2a" stroke-width="2.5"/><path d="M78 15 L81 26 L78 37 L75 26 Z" fill="#d43f37"/></svg>`,
+ sevenw:`<svg viewBox="0 0 160 100" class="gart"><path d="M70 34 L115 14 L160 34 Z" fill="#e8c27a"/><rect x="70" y="34" width="90" height="6" fill="#e8c27a"/><g fill="#e8c27a" opacity=".9"><rect x="76" y="42" width="9" height="46"/><rect x="96" y="42" width="9" height="46"/><rect x="116" y="42" width="9" height="46"/><rect x="136" y="42" width="9" height="46"/></g><rect x="66" y="88" width="98" height="8" fill="#e8c27a"/></svg>`};
+function gameHead(k,eyebrow,title,sub,btn){return `<header class="ghead th-${k}">${GAME_ART[k]||''}<div class="ghead-txt">${btn?`<div class="ghead-btn">${btn}</div>`:''}<p class="eyebrow">${eyebrow}</p><h1>${title}</h1>${sub?`<p class="small ghead-sub">${sub}</p>`:''}</div></header>`}
 function gameLabel(g){
   if(g.type==='skyjo')return g.variant==='action'?'Skyjo Action':'Skyjo';
   if(g.type==='lostcities')return 'Lost Cities';
@@ -494,7 +517,7 @@ V.home=()=>{
     <button class="card resume" data-a="open-game" data-id="${g.id}"><div class="row between"><h3>${esc(gameLabel(g))}</h3><span class="muted small">Manche ${g.rounds.length+1}</span></div>
     <div class="row">${g.players.map(p=>`<span class="row" style="gap:6px"><span class="dot" style="--pc:${p.color}"></span><span class="small"><b>${esc(p.name)}</b> <span class="num">${fmt(t[p.id])}</span></span></span>`).join('')}</div></button>`}).join('')}</section>`:''}
   <section class="stack"><p class="eyebrow">Nouvelle partie</p><div class="games">
-  ${Object.entries(GAMES).map(([k,G])=>`<button class="card game" style="--gc:var(${G.gc});text-align:left;width:100%" data-a="setup" data-type="${k}" data-variant="${Object.keys(G.variants)[0]}"><div class="row between" style="flex-wrap:nowrap"><div class="grow"><h2>${G.name}</h2><p class="muted small">${G.rule}</p></div><span class="num" style="font-size:1.6rem;color:var(--gc)" aria-hidden="true">→</span></div></button>`).join('')}
+  ${Object.entries(GAMES).map(([k,G])=>`<button class="game th-${k}" data-a="setup" data-type="${k}" data-variant="${Object.keys(G.variants)[0]}">${GAME_ART[k]||''}<div class="game-txt"><h2>${G.name}</h2><p class="small">${G.rule}</p></div></button>`).join('')}
   </div></section>
   <section class="stack"><p class="eyebrow">Avant de commencer</p>
   <button class="card chooser-cta" data-a="chooser"><span class="fingers"><span style="--pc:#e4572e"></span><span style="--pc:#13998c"></span><span style="--pc:#3a5bd9"></span><span style="--pc:#d99a00"></span></span><span class="grow"><h3>Qui commence ?</h3><span class="muted small">Un doigt chacun sur l'écran</span></span></button>
@@ -508,7 +531,7 @@ V.setup=()=>{
   if(n<G.min)err=G.min===G.max?`Choisis ${G.min} joueurs.`:`Choisis au moins ${G.min} joueurs.`;
   else if(n>G.max)err=`${G.max} joueurs maximum pour ce jeu.`;
   return `
-  <header class="top"><div><p class="eyebrow">Nouvelle partie</p><h1>${G.name}</h1></div><button class="btn ghost" data-a="nav" data-v="home">Annuler</button></header>
+  ${gameHead(s.type,'Nouvelle partie',G.name,'',`<button class="btn ghost" data-a="nav" data-v="home">Annuler</button>`)}
   ${Object.keys(G.variants).length>1?`<div class="card"><p class="eyebrow">Version</p><div class="row">${Object.entries(G.variants).map(([vk,vn])=>`<button class="chip ${s.variant===vk?'on':''}" data-a="setup-variant" data-variant="${vk}">${vn}</button>`).join('')}</div>
 </div>`:''}
   <div class="card"><div class="row between"><p class="eyebrow">Joueurs, dans l'ordre de jeu</p><span class="muted small">${n} choisi${n>1?'s':''}</span></div>
@@ -593,7 +616,7 @@ V.game=()=>{
   else if(g.type==='lostcities'&&!done)progress=`<p class="muted small">Manche ${Math.min(g.rounds.length+1,g.nRounds)} sur ${g.nRounds}</p>`;
   const winnersTxt=w=>w.map(id=>esc(g.players.find(p=>p.id===id).name)).join(' et ');
   return `
-  <header class="top"><div><p class="eyebrow">${done?'Partie terminée · '+new Date(g.endedAt).toLocaleDateString('fr-FR'):'Partie en cours'}</p><h1>${esc(gameLabel(g))}</h1>${g.type==='sevenw'?`<p class="muted small">${g.exp&&g.exp.length?'Avec '+g.exp.map(k=>SW_EXP[k]).join(', '):'Jeu de base'}</p>`:''}</div><button class="btn ghost" data-a="nav" data-v="${done?'history':'home'}">${done?'Retour':'Accueil'}</button></header>
+  ${gameHead(g.type,done?'Partie terminée · '+new Date(g.endedAt).toLocaleDateString('fr-FR'):'Partie en cours',esc(gameLabel(g)),g.type==='sevenw'?(g.exp&&g.exp.length?'Avec '+g.exp.map(k=>SW_EXP[k]).join(', '):'Jeu de base'):'',`<button class="btn ghost" data-a="nav" data-v="${done?'history':'home'}">${done?'Retour':'Accueil'}</button>`)}
   ${progress}
   ${end?`<div class="banner"><h2>${end.winners.length>1?'Égalité : ':''}${winnersTxt(end.winners)} ${end.winners.length>1?'gagnent':'gagne'} !</h2>${end.coinTie?'<p class="small"><b>Égalité de points, départagée au trésor.</b></p>':''}<button class="btn primary" data-a="finish">Enregistrer dans l'historique</button></div>`:''}
   ${done?`<div class="card"><p class="eyebrow">Classement</p><div class="list">${ranking(g,t).map((p,i)=>`<div><span class="num" style="width:1.6ch;color:var(--ink-soft)">${i+1}</span><span class="avatar" style="--pc:${p.color}">${avt(p)}</span><b class="grow ellipsis">${esc(p.name)}${g.winners.includes(p.id)?' 🏆':''}</b><span class="num" style="font-size:1.2rem">${fmt(t[p.id])}</span></div>`).join('')}</div></div>`:''}
@@ -621,7 +644,7 @@ V.round=()=>{
   else if(g.type==='lostcities')body=lcEditor(g,d);
   else if(g.type==='sevenw')body=swEditor(g,d);
   else body=f7Editor(g,d);
-  return `<header class="top"><div><p class="eyebrow">${esc(gameLabel(g))}</p><h1>${title}</h1></div></header>
+  return `${gameHead(g.type,esc(gameLabel(g)),title,'','')}
   ${body}
   ${UI.roundErr?`<p class="err" style="padding-left:8px">${esc(UI.roundErr)}</p>`:''}
   ${d.index!==null?(UI.confirmDelRound?`<div class="card"><p>${g.type==='sevenw'?'Effacer tout le décompte ?':'Supprimer la manche '+(d.index+1)+' ?'}</p><div class="row"><button class="btn danger" data-a="del-round">Supprimer</button><button class="btn" data-a="cancel-del-round">Garder</button></div></div>`:`<button class="btn ghost" data-a="ask-del-round">${g.type==='sevenw'?'Effacer le décompte':'Supprimer cette manche'}</button>`):''}
