@@ -78,6 +78,25 @@ textarea{min-height:120px;font-family:ui-monospace,Menlo,monospace;font-size:.8r
 .chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .chip.var{border-color:color-mix(in srgb,var(--gc) 55%,var(--border))}
 .dot{width:12px;height:12px;border-radius:50%;background:var(--pc,var(--accent));flex:none}
+.seg{display:flex;gap:8px}
+.fo-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.fo-side{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.fo-side b{max-width:100%}
+.fo-score{display:flex;align-items:center;gap:8px;font-size:2.4rem}
+.fo-score .num{font-weight:800}
+.vs2{color:var(--ink-soft);font-family:var(--f-display)}
+.fo-bar{display:flex;height:12px;border-radius:99px;overflow:hidden;gap:2px}
+.fo-mini{font-size:1.1rem}
+.fo-dot{width:18px;height:18px;border-radius:50%;background:var(--pc)}
+.chip[disabled]{opacity:.35}
+.pl-open{display:flex;align-items:center;gap:12px;flex:1;min-width:0;text-align:left;padding:0}
+.pedit{flex-direction:column;align-items:stretch!important;gap:10px!important;background:var(--surface-2);margin:6px -8px;padding:12px!important;border-radius:14px;border-bottom:0!important}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.sw-c{width:34px;height:34px;border-radius:50%;background:var(--pc);border:3px solid var(--surface)}
+.sw-c.on{box-shadow:0 0 0 2.5px var(--ink)}
+.sw-s{width:40px;height:40px;border-radius:12px;background:var(--surface);border:1.5px solid var(--border);font-size:1.25rem;font-weight:800;font-family:var(--f-display);display:inline-flex;align-items:center;justify-content:center}
+.sw-s.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.sym{font-size:1.1em;line-height:1;filter:saturate(1.1)}
 .avatar{width:30px;height:30px;border-radius:50%;background:var(--pc);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:800;font-size:.85rem;flex:none}
 .list{display:flex;flex-direction:column}
 .list > *{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);min-width:0}
@@ -426,6 +445,8 @@ function endState(g){
 
 const KEY='carnet-scores-v1';
 const PCOLORS=['#e4572e','#13998c','#d99a00','#3a5bd9','#c2409a','#4c9a2a','#8a5cf6','#ef7d31','#0f8bb5','#b8434f'];
+const XCOLORS=PCOLORS.concat(['#1f2937','#e11d74','#65a30d','#0d9488','#a16207','#6d28d9']);
+const SYMS=['🦊','🐼','🐸','🐙','🦉','🐢','🦁','🐧','🦄','🐝','🐳','🦖','🌵','🍄','🌻','🔥','⚡','🌙','⭐','🎲','🃏','👑','🚀','🎯'];
 const GAMES={
   skyjo:{name:'Skyjo',gc:'--g-skyjo',min:2,max:8,variants:{normal:'Classique',action:'Action'},rule:'Fin à 100 points · le plus petit total gagne'},
   flip7:{name:'Flip 7',gc:'--g-f7',min:2,max:18,variants:{classic:'Classique',vengeance:'Vengeance',sanspitie:'Sans pitié'},rule:'Premier à 200 points · le plus gros total gagne'},
@@ -443,6 +464,7 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const clone=o=>JSON.parse(JSON.stringify(o));
 const fmt=n=>n<0?'−'+Math.abs(n):String(n);
 const initials=n=>esc(n.trim().slice(0,2).toUpperCase());
+const avt=p=>p&&p.sym?`<span class="sym">${esc(p.sym)}</span>`:initials((p&&p.name)||'?');
 
 function load(){try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);if(d&&Array.isArray(d.players)&&Array.isArray(d.games))return d}}catch(e){}return{players:[],games:[]}}
 let S=load();
@@ -571,7 +593,7 @@ V.game=()=>{
   <header class="top"><div><p class="eyebrow">${done?'Partie terminée · '+new Date(g.endedAt).toLocaleDateString('fr-FR'):'Partie en cours'}</p><h1>${esc(gameLabel(g))}</h1>${g.type==='sevenw'?`<p class="muted small">${g.exp&&g.exp.length?'Avec '+g.exp.map(k=>SW_EXP[k]).join(', '):'Jeu de base'}</p>`:''}</div><button class="btn ghost" data-a="nav" data-v="${done?'history':'home'}">${done?'Retour':'Accueil'}</button></header>
   ${progress}
   ${end?`<div class="banner"><h2>${end.winners.length>1?'Égalité : ':''}${winnersTxt(end.winners)} ${end.winners.length>1?'gagnent':'gagne'} !</h2>${end.coinTie?'<p class="small"><b>Égalité de points, départagée au trésor.</b></p>':''}<button class="btn primary" data-a="finish">Enregistrer dans l'historique</button></div>`:''}
-  ${done?`<div class="card"><p class="eyebrow">Classement</p><div class="list">${ranking(g,t).map((p,i)=>`<div><span class="num" style="width:1.6ch;color:var(--ink-soft)">${i+1}</span><span class="avatar" style="--pc:${p.color}">${initials(p.name)}</span><b class="grow ellipsis">${esc(p.name)}${g.winners.includes(p.id)?' 🏆':''}</b><span class="num" style="font-size:1.2rem">${fmt(t[p.id])}</span></div>`).join('')}</div></div>`:''}
+  ${done?`<div class="card"><p class="eyebrow">Classement</p><div class="list">${ranking(g,t).map((p,i)=>`<div><span class="num" style="width:1.6ch;color:var(--ink-soft)">${i+1}</span><span class="avatar" style="--pc:${p.color}">${avt(p)}</span><b class="grow ellipsis">${esc(p.name)}${g.winners.includes(p.id)?' 🏆':''}</b><span class="num" style="font-size:1.2rem">${fmt(t[p.id])}</span></div>`).join('')}</div></div>`:''}
   ${hidden?`<div class="banner reveal-cta"><h2>Tous les scores sont saisis</h2><button class="btn primary" data-a="reveal">Révéler le classement</button></div>`:''}
   ${g.type==='sevenw'?swTable(g,!done,hidden):scoreTable(g,!done)}
   ${!done&&!g.rounds.length&&g.type!=='skyjo'?`<button class="btn block who-btn" data-a="wheel" data-src="game">Qui commence ? Tirer au sort</button>`:''}
@@ -606,7 +628,7 @@ V.round=()=>{
 function skyjoEditor(g,d){
   const sc=roundScores(g,d.data);
   return `<div class="card"><p class="eyebrow">Points de la manche</p>
-  <div>${g.players.map(p=>{const v=d.data.raw[p.id]??'';return `<div class="skyrow"><div class="row grow" style="gap:8px;flex-wrap:nowrap"><span class="avatar" style="--pc:${p.color}">${initials(p.name)}</span><div class="grow"><b class="ellipsis" style="display:block">${esc(p.name)}</b><span class="sky-prev" id="prev-${p.id}">${sc.meta[p.id]?`Doublé : ${fmt(sc.scores[p.id])}`:''}</span></div></div>
+  <div>${g.players.map(p=>{const v=d.data.raw[p.id]??'';return `<div class="skyrow"><div class="row grow" style="gap:8px;flex-wrap:nowrap"><span class="avatar" style="--pc:${p.color}">${avt(p)}</span><div class="grow"><b class="ellipsis" style="display:block">${esc(p.name)}</b><span class="sky-prev" id="prev-${p.id}">${sc.meta[p.id]?`Doublé : ${fmt(sc.scores[p.id])}`:''}</span></div></div>
     <div class="inp"><input type="text" inputmode="numeric" id="sky-${p.id}" data-in="sky" data-id="${p.id}" value="${esc(v)}" placeholder="0" autocomplete="off"></div>
     <button class="fin ${d.data.finisher===p.id?'on':''}" data-a="sky-fin" data-id="${p.id}">A fini</button></div>`}).join('')}</div></div>`;
 }
@@ -657,12 +679,19 @@ function f7Editor(g,d){
   </div>`;
 }
 
+function playerEditor(p){const e=UI.pe;
+  return `<div class="pedit"><div class="row" style="gap:12px;flex-wrap:nowrap"><span class="avatar big" style="--pc:${e.color}">${avt({name:e.name||p.name,sym:e.sym})}</span>
+    <input type="text" id="pe-name" value="${esc(e.name)}" maxlength="20" autocomplete="off" aria-label="Prénom"></div>
+    <p class="eyebrow">Couleur</p><div class="swatches">${XCOLORS.map(c=>`<button class="sw-c ${e.color===c?'on':''}" style="--pc:${c}" data-a="pe-color" data-c="${c}" aria-label="Couleur ${c}"></button>`).join('')}</div>
+    <p class="eyebrow">Symbole</p><div class="swatches"><button class="sw-s ${!e.sym?'on':''}" data-a="pe-sym" data-s="">${initials(e.name||p.name)}</button>${SYMS.map(x=>`<button class="sw-s ${e.sym===x?'on':''}" data-a="pe-sym" data-s="${x}">${x}</button>`).join('')}</div>
+    ${UI.peErr?`<p class="err">${esc(UI.peErr)}</p>`:''}
+    <div class="row"><button class="btn primary" data-a="pe-save">Enregistrer</button><button class="btn" data-a="pe-cancel">Annuler</button></div></div>`}
 V.players=()=>{
   const stats=playerStats();
   return `<header class="top"><div><p class="eyebrow">Joueurs</p><h1>Les joueurs</h1></div></header>
   <div class="card"><form class="row" data-f="player-add" style="flex-wrap:nowrap"><input type="text" id="pl-name" placeholder="Prénom" autocomplete="off" maxlength="20"><button class="btn primary" type="submit">Ajouter</button></form>${UI.playerErr?`<p class="err">${esc(UI.playerErr)}</p>`:''}
   ${S.players.length?`<div class="list">${S.players.map(p=>{const st=stats[p.id]||{played:0,wins:0};return UI.confirmDelPlayer===p.id?`<div style="flex-wrap:wrap"><span class="grow">Supprimer <b>${esc(p.name)}</b> ? Ses parties passées restent dans l'historique.</span><button class="btn danger" data-a="del-player" data-id="${p.id}">Supprimer</button><button class="btn" data-a="cancel-del-player">Garder</button></div>`:
-    `<div><span class="avatar" style="--pc:${p.color}">${initials(p.name)}</span><span class="grow"><b class="ellipsis" style="display:block">${esc(p.name)}</b><span class="muted small">${st.played} partie${st.played>1?'s':''} · ${st.wins} victoire${st.wins>1?'s':''}</span></span><button class="icon-btn" data-a="ask-del-player" data-id="${p.id}" aria-label="Supprimer ${esc(p.name)}">×</button></div>`}).join('')}</div>`:`<p class="muted">Aucun joueur pour l'instant.</p>`}
+    UI.editPlayer===p.id?playerEditor(p):`<div><button class="pl-open" data-a="edit-player" data-id="${p.id}"><span class="avatar" style="--pc:${p.color}">${avt(p)}</span><span class="grow"><b class="ellipsis" style="display:block">${esc(p.name)}</b><span class="muted small">${st.played} partie${st.played>1?'s':''} · ${st.wins} victoire${st.wins>1?'s':''}</span></span></button><button class="icon-btn" data-a="ask-del-player" data-id="${p.id}" aria-label="Supprimer ${esc(p.name)}">×</button></div>`}).join('')}</div>`:`<p class="muted">Aucun joueur pour l'instant.</p>`}
   </div>
   <div class="card"><div><h3>Sauvegarde</h3><p class="muted small">Pour garder ou transférer vos parties.</p></div>
     ${UI.dataMode==='export'?`<textarea id="exp-txt" readonly>${esc(JSON.stringify(S))}</textarea><div class="row"><button class="btn primary" data-a="copy-export">${UI.copied?'Copié':'Copier'}</button><button class="btn" data-a="data-mode" data-m="">Fermer</button></div>`
@@ -714,6 +743,28 @@ function statTable(ft,P,ids,who){
   return `<div class="card"><p class="eyebrow">Le détail</p><div class="scroll-x"><table class="scores ptable"><thead><tr><th>Joueur</th>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead>
   <tbody>${ids.map(id=>{const s=P[id],p=who(id);return `<tr><td><span class="row" style="gap:6px;flex-wrap:nowrap"><span class="dot" style="--pc:${p.color}"></span>${esc(p.name)}</span></td>${cols.map(c=>`<td>${c[1](s)}</td>`).join('')}</tr>`}).join('')}</tbody></table></div></div>`;
 }
+function faceoff(done,who){
+  const ids=[...new Set(done.flatMap(g=>g.players.map(p=>p.id)))];
+  if(ids.length<2)return `<div class="card"><p class="muted">Il faut au moins deux joueurs ayant terminé une partie.</p></div>`;
+  const freq=id=>done.filter(g=>g.players.some(p=>p.id===id)).length;ids.sort((x,y)=>freq(y)-freq(x));
+  let a=UI.foA&&ids.includes(UI.foA)?UI.foA:ids[0],b=UI.foB&&ids.includes(UI.foB)&&UI.foB!==a?UI.foB:ids.find(x=>x!==a);
+  const A=who(a),B=who(b);
+  const shared=done.filter(g=>g.players.some(p=>p.id===a)&&g.players.some(p=>p.id===b)).sort((x,y)=>x.endedAt-y.endedAt);
+  let wa=0,wb=0,tie=0;const per={},last=[];
+  shared.forEach(g=>{const t=totals(g);const d=isLow(g)?t[b]-t[a]:t[a]-t[b];const k=g.type;per[k]=per[k]||[0,0];
+    if(d>0){wa++;per[k][0]++;last.push('a')}else if(d<0){wb++;per[k][1]++;last.push('b')}else{tie++;last.push('t')}});
+  const n=shared.length;const pick=(cur,other,act)=>ids.map(id=>{const p=who(id);return `<button class="chip ${id===cur?'on':''}" ${id===other?'disabled':''} data-a="${act}" data-id="${id}"><span class="dot" style="--pc:${p.color}"></span>${esc(p.name)}</button>`}).join('');
+  return `<div class="card"><p class="eyebrow">Joueur 1</p><div class="tabs">${pick(a,b,'fo-a')}</div><p class="eyebrow">Joueur 2</p><div class="tabs">${pick(b,a,'fo-b')}</div></div>
+  <div class="card fo">
+    <div class="fo-head"><div class="fo-side"><span class="avatar big" style="--pc:${A.color}">${avt(A)}</span><b class="ellipsis">${esc(A.name)}</b></div>
+      <div class="fo-score"><span class="num">${wa}</span><span class="vs2">–</span><span class="num">${wb}</span></div>
+      <div class="fo-side"><span class="avatar big" style="--pc:${B.color}">${avt(B)}</span><b class="ellipsis">${esc(B.name)}</b></div></div>
+    ${n?`<div class="fo-bar"><span style="flex:${wa||0.001};background:${A.color}"></span>${tie?`<span style="flex:${tie};background:var(--border)"></span>`:''}<span style="flex:${wb||0.001};background:${B.color}"></span></div>
+    <p class="small muted" style="text-align:center">${plural(n,'partie')} ensemble${tie?` · ${plural(tie,'égalité')}`:''} · qui finit devant l'autre</p>`:`<p class="muted" style="text-align:center">Pas encore de partie terminée ensemble.</p>`}
+  </div>
+  ${n?`<div class="card"><p class="eyebrow">Par jeu</p><div class="list">${Object.keys(GAMES).filter(k=>per[k]).map(k=>`<div><span class="dot" style="--pc:var(${GAMES[k].gc});width:10px;height:22px;border-radius:4px"></span><span class="grow"><b>${GAMES[k].name}</b></span><span class="num fo-mini"><span style="color:${A.color}">${per[k][0]}</span> – <span style="color:${B.color}">${per[k][1]}</span></span></div>`).join('')}</div>
+    <p class="eyebrow">Derniers duels</p><div class="row" style="gap:6px">${last.slice(-10).map(x=>`<span class="fo-dot" style="--pc:${x==='a'?A.color:x==='b'?B.color:'var(--border)'}"></span>`).join('')}</div></div>`:''}`;
+}
 V.stats=()=>{
   const done=S.games.filter(g=>g.status==='done');
   const types=Object.keys(GAMES).filter(k=>done.some(g=>g.type===k));
@@ -726,7 +777,7 @@ V.stats=()=>{
   const ranked=Object.keys(P).sort((x,y)=>P[y].wins-P[x].wins||P[x].played-P[y].played);
   const pod=ranked.slice(0,3);const order=[pod[1],pod[0],pod[2]].filter(Boolean);
   const podium=pod.length?`<div class="card"><p class="eyebrow">${ft?'Qui domine '+(ft==='lostcities'||ft==='sevenw'?'à ':'au ')+esc(GAMES[ft].name)+' ?':'Le podium'}</p>
-    <div class="podium">${order.map(id=>{const r=pod.indexOf(id),p=who(id),s=P[id];return `<div class="pod r${r+1}"><span class="avatar big" style="--pc:${p.color}">${initials(p.name)}</span><b class="ellipsis">${esc(p.name)}</b><span class="small muted">${plural(s.wins,'victoire')}</span><div class="step"><span class="num">${r+1}</span></div></div>`}).join('')}</div>
+    <div class="podium">${order.map(id=>{const r=pod.indexOf(id),p=who(id),s=P[id];return `<div class="pod r${r+1}"><span class="avatar big" style="--pc:${p.color}">${avt(p)}</span><b class="ellipsis">${esc(p.name)}</b><span class="small muted">${plural(s.wins,'victoire')}</span><div class="step"><span class="num">${r+1}</span></div></div>`}).join('')}</div>
     ${ranked.length>3?`<p class="small muted">Et aussi : ${ranked.slice(3).map(id=>`${esc(who(id).name)} (${P[id].wins})`).join(', ')}</p>`:''}</div>`:'';
   let aw=[];
   if(!ft){
@@ -755,9 +806,11 @@ V.stats=()=>{
         award(P,'best',{title:'La grosse manche',line:s=>`${fmt(s.best)} points en une manche`})];
   }
   aw=aw.filter(Boolean);
-  const awards=aw.length?`<div class="stack"><p class="eyebrow" style="padding-left:8px">Les titres</p><div class="awards">${aw.map(a=>{const p=who(a.id);return `<div class="award"><span class="small award-t">${a.title}</span><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="avatar" style="--pc:${p.color}">${initials(p.name)}</span><b class="ellipsis">${esc(p.name)}</b></span><span class="small muted">${a.line}</span></div>`}).join('')}</div></div>`:'';
+  const awards=aw.length?`<div class="stack"><p class="eyebrow" style="padding-left:8px">Les titres</p><div class="awards">${aw.map(a=>{const p=who(a.id);return `<div class="award"><span class="small award-t">${a.title}</span><span class="row" style="gap:8px;flex-wrap:nowrap"><span class="avatar" style="--pc:${p.color}">${avt(p)}</span><b class="ellipsis">${esc(p.name)}</b></span><span class="small muted">${a.line}</span></div>`}).join('')}</div></div>`:'';
+  const modeBar=`<div class="seg"><button class="chip ${UI.statMode!=='fo'?'on':''}" data-a="stat-mode" data-m="">Classement</button><button class="chip ${UI.statMode==='fo'?'on':''}" data-a="stat-mode" data-m="fo">Face-à-face</button></div>`;
+  if(UI.statMode==='fo')return `<header class="top"><div><p class="eyebrow">Statistiques</p><h1>Face-à-face</h1></div></header>${done.length?modeBar+faceoff(done,who):`<div class="card"><p class="muted">Aucune partie terminée pour l'instant.</p></div>`}`;
   return `<header class="top"><div><p class="eyebrow">Statistiques</p><h1>Qui domine ?</h1></div><span class="date">${plural(games.length,'partie')}</span></header>
-  ${done.length?`<div class="tabs"><button class="chip ${!ft?'on':''}" data-a="stat-game" data-t="">Tous les jeux</button>${types.map(k=>`<button class="chip ${ft===k?'on':''}" data-a="stat-game" data-t="${k}">${GAMES[k].name}</button>`).join('')}</div>
+  ${done.length?modeBar+`<div class="tabs"><button class="chip ${!ft?'on':''}" data-a="stat-game" data-t="">Tous les jeux</button>${types.map(k=>`<button class="chip ${ft===k?'on':''}" data-a="stat-game" data-t="${k}">${GAMES[k].name}</button>`).join('')}</div>
   ${vars.length>1?`<div class="tabs" style="margin-top:-8px"><button class="chip ${!fv?'on':''}" data-a="stat-var" data-v="">Toutes versions</button>${vars.map(v=>`<button class="chip ${fv===v?'on':''}" data-a="stat-var" data-v="${v}">${GAMES[ft].variants[v]}</button>`).join('')}</div>`:''}
   ${podium}${awards}${ft?statTable(ft,P,ranked,who):''}`
   :`<div class="card"><p class="muted">Aucune partie terminée pour l'instant.</p></div>`}`;
@@ -770,11 +823,11 @@ V.reveal=()=>{
     let duo=order.slice(-2);if(UI.duelSwap)duo=[duo[1],duo[0]];
     const ph=UI.duel;const win=id=>end.winners.includes(id);
     return `<div class="chooser reveal duel-wrap ph${ph}"><div class="ch-bar"><span class="eyebrow" style="color:#aab2c8">${esc(gameLabel(g))} · Le face-à-face</span></div>
-    <div class="duel">${duo.map((p,i)=>`${i===1?'<span class="vs">VS</span>':''}<div class="duel-card ${ph===2?(win(p.id)?'win':'lose'):''}" style="--pc:${p.color}">${ph===2&&win(p.id)?'<span class="rays"></span>':''}<span class="avatar xl" style="--pc:${p.color}">${initials(p.name)}</span><b>${esc(p.name)}</b><span class="duel-score" ${ph===2?`data-count="${t[p.id]}"`:''}>${ph===2?'0':'?'}</span></div>`).join('')}</div>
+    <div class="duel">${duo.map((p,i)=>`${i===1?'<span class="vs">VS</span>':''}<div class="duel-card ${ph===2?(win(p.id)?'win':'lose'):''}" style="--pc:${p.color}">${ph===2&&win(p.id)?'<span class="rays"></span>':''}<span class="avatar xl" style="--pc:${p.color}">${avt(p)}</span><b>${esc(p.name)}</b><span class="duel-score" ${ph===2?`data-count="${t[p.id]}"`:''}>${ph===2?'0':'?'}</span></div>`).join('')}</div>
     <div class="rv-foot">${ph===2?`<p class="rv-win">${end.winners.map(id=>esc(g.players.find(p=>p.id===id).name)).join(' et ')} ${end.winners.length>1?'gagnent':'gagne'} !</p>${end.coinTie?'<p class="small" style="color:#aab2c8">Égalité de points, départagée au trésor</p>':''}<button class="btn primary" data-a="reveal-done">Voir le détail</button>`:'<p class="rv-win suspense">Qui l\'emporte ?</p>'}</div></div>`;
   }
   return `<div class="chooser reveal"><div class="ch-bar"><span class="eyebrow" style="color:#aab2c8">${esc(gameLabel(g))}</span></div>
-  <div class="rv-list">${order.map((p,i)=>{const rank=n-i;const shown=step>i;return `<div class="rv-row ${shown?'in':''} ${shown&&i===step-1?'new':''}" ${shown?`style="--pc:${p.color}"`:''}><span class="rv-rank">${rank}</span>${shown?`<span class="avatar" style="--pc:${p.color}">${initials(p.name)}</span>`:'<span class="avatar" style="--pc:#323a52">?</span>'}<b class="grow ellipsis">${shown?esc(p.name):'…'}</b><span class="rv-score">${shown?fmt(t[p.id]):'?'}</span></div>`}).reverse().join('')}</div>
+  <div class="rv-list">${order.map((p,i)=>{const rank=n-i;const shown=step>i;return `<div class="rv-row ${shown?'in':''} ${shown&&i===step-1?'new':''}" ${shown?`style="--pc:${p.color}"`:''}><span class="rv-rank">${rank}</span>${shown?`<span class="avatar" style="--pc:${p.color}">${avt(p)}</span>`:'<span class="avatar" style="--pc:#323a52">?</span>'}<b class="grow ellipsis">${shown?esc(p.name):'…'}</b><span class="rv-score">${shown?fmt(t[p.id]):'?'}</span></div>`}).reverse().join('')}</div>
   <div class="rv-foot">${step>=n-2?`<p class="small" style="color:#aab2c8;text-align:center">Il ne reste que deux joueurs en lice…</p><button class="btn primary" data-a="duel">Lancer le face-à-face</button>`:`<button class="btn" data-a="reveal-next">${step===0?'Commencer':'Suivant'}</button>`}</div></div>`;
 };
 function confetti(){
@@ -867,6 +920,19 @@ let duelTimer=null;
 A.duel=()=>{UI.duel=1;UI.duelCele=false;UI.duelSwap=Math.random()<.5;render();clearTimeout(duelTimer);duelTimer=setTimeout(()=>{if(UI.view==='reveal'&&UI.duel===1){UI.duel=2;render();try{navigator.vibrate&&navigator.vibrate([60,40,120])}catch(_){}}},2800)};
 A['reveal-next']=()=>{UI.revealStep=(UI.revealStep||0)+1;render()};
 A['reveal-done']=()=>{clearTimeout(duelTimer);UI.duel=0;const g=gameById(UI.gameId);g.revealed=true;save();go('game',{gameId:g.id})};
+A['edit-player']=d=>{const p=player(d.id);UI.editPlayer=d.id;UI.pe={name:p.name,color:p.color,sym:p.sym||''};UI.peErr='';render()};
+A['pe-color']=d=>{UI.pe.name=document.getElementById('pe-name').value;UI.pe.color=d.c;render()};
+A['pe-sym']=d=>{UI.pe.name=document.getElementById('pe-name').value;UI.pe.sym=d.s;render()};
+A['pe-cancel']=()=>{UI.editPlayer=null;render()};
+A['pe-save']=()=>{const p=player(UI.editPlayer);const name=document.getElementById('pe-name').value.trim().replace(/\s+/g,' ');
+  if(!name){UI.peErr='Écris un prénom.';render();return}
+  if(S.players.some(x=>x.id!==p.id&&x.name.toLowerCase()===name.toLowerCase())){UI.peErr=name+' existe déjà.';render();return}
+  Object.assign(p,{name,color:UI.pe.color,sym:UI.pe.sym||undefined});if(!p.sym)delete p.sym;
+  S.games.forEach(g=>g.players.forEach(q=>{if(q.id===p.id){q.name=p.name;q.color=p.color;if(p.sym)q.sym=p.sym;else delete q.sym}}));
+  UI.editPlayer=null;save();render()};
+A['stat-mode']=d=>{UI.statMode=d.m||null;render()};
+A['fo-a']=d=>{UI.foA=d.id;render()};
+A['fo-b']=d=>{UI.foB=d.id;render()};
 A['setup-exp']=d=>{const e=UI.setup.exp,i=e.indexOf(d.k);i>=0?e.splice(i,1):e.push(d.k);render()};
 A['setup-variant']=d=>{UI.setup.variant=d.variant;render()};
 A['setup-toggle']=d=>{const s=UI.setup.selected,i=s.indexOf(d.id);i>=0?s.splice(i,1):s.push(d.id);UI.setupErr='';render()};
