@@ -1117,5 +1117,14 @@ addEventListener('online',()=>{if(gid){status('connecting');if(!user)signInAnony
 addEventListener('offline',()=>{if(gid)status('offline')});
 window.dispatchEvent(new Event('fb-ready'));
 </script>
-<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
+<script>
+if('serviceWorker' in navigator){
+  const hadCtrl=!!navigator.serviceWorker.controller;let reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!hadCtrl||reloaded)return;reloaded=true;
+    const busy=document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName);if(!busy)location.reload()});
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')reg.update().catch(()=>{})});
+    setInterval(()=>reg.update().catch(()=>{}),30*60*1000)}).catch(()=>{}));
+}
+</script>
 </body></html>

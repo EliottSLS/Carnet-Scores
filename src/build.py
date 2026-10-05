@@ -122,7 +122,16 @@ addEventListener('online',()=>{{if(gid){{status('connecting');if(!user)signInAno
 addEventListener('offline',()=>{{if(gid)status('offline')}});
 window.dispatchEvent(new Event('fb-ready'));
 </script>
-<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{{}}));</script>"""
+<script>
+if('serviceWorker' in navigator){{
+  const hadCtrl=!!navigator.serviceWorker.controller;let reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{{if(!hadCtrl||reloaded)return;reloaded=true;
+    const busy=document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName);if(!busy)location.reload()}});
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{{updateViaCache:'none'}}).then(reg=>{{
+    document.addEventListener('visibilitychange',()=>{{if(document.visibilityState==='visible')reg.update().catch(()=>{{}})}});
+    setInterval(()=>reg.update().catch(()=>{{}}),30*60*1000)}}).catch(()=>{{}}));
+}}
+</script>"""
 
 head = """<!doctype html>
 <html lang="fr"><head>
@@ -165,12 +174,12 @@ const timeout=(p,ms)=>new Promise((res,rej)=>{{const t=setTimeout(()=>rej(new Er
 self.addEventListener('fetch',e=>{{
   const req=e.request;if(req.method!=='GET')return;const u=new URL(req.url);
   if(req.mode==='navigate'){{
-    e.respondWith(timeout(fetch(req),3500).then(r=>{{const cp=r.clone();caches.open(V).then(c=>c.put('./index.html',cp));return r}}).catch(()=>caches.match('./index.html')));return}}
+    e.respondWith(timeout(fetch(req.url,{{cache:'no-cache',credentials:'same-origin'}}),3500).then(r=>{{const cp=r.clone();caches.open(V).then(c=>c.put('./index.html',cp));return r}}).catch(()=>caches.match('./index.html')));return}}
   const same=u.origin===location.origin,ext=EXT.includes(u.hostname);
   if(!same&&!ext)return;
   const store=ext?'carnet-ext':V;
   e.respondWith(caches.match(req).then(hit=>{{
-    const net=fetch(req).then(r=>{{if(r.ok||r.type==='opaque'){{const cp=r.clone();caches.open(store).then(c=>c.put(req,cp))}}return r}}).catch(()=>hit);
+    const net=fetch(same?new Request(req,{{cache:'no-cache'}}):req).then(r=>{{if(r.ok||r.type==='opaque'){{const cp=r.clone();caches.open(store).then(c=>c.put(req,cp))}}return r}}).catch(()=>hit);
     return hit||net}}));
 }});
 """)
