@@ -12,7 +12,7 @@
   --shadow:0 1px 2px rgba(27,33,51,.06),0 4px 14px rgba(27,33,51,.06);
   --f-display:"Bricolage Grotesque",ui-rounded,"Segoe UI",system-ui,sans-serif;
   --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --g-skyjo:#13998c; --g-lc:#c58a12; --g-f7:#d8433b; --g-7w:#8a6a3f;
+  --g-skyjo:#13998c; --g-lc:#c58a12; --g-f7:#d8433b; --g-7w:#8a6a3f; --g-az:#2a6fdb;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --paper:#11141d; --line:rgba(140,165,255,.05); --line-strong:rgba(140,165,255,.09); --margin:rgba(235,100,90,.35);
@@ -20,14 +20,14 @@
   --ink:#e8ebf4; --ink-soft:#9aa3b9; --accent:#8fa4ff; --accent-ink:#0d1020; --accent-soft:#252f52;
   --danger:#ff7a70; --danger-soft:#3a1f22; --good:#5fd08e; --good-soft:#173324; --warn:#f2b54a;
   --shadow:0 1px 2px rgba(0,0,0,.3);
-  --g-skyjo:#3cc6b8; --g-lc:#e8b23f; --g-f7:#ff6f66; --g-7w:#d1a86b; color-scheme:dark}}
+  --g-skyjo:#3cc6b8; --g-lc:#e8b23f; --g-f7:#ff6f66; --g-7w:#d1a86b; --g-az:#6fa0ff; color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#11141d; --line:rgba(140,165,255,.05); --line-strong:rgba(140,165,255,.09); --margin:rgba(235,100,90,.35);
   --surface:#1a1f2c; --surface-2:#232a3b; --border:#2e3649;
   --ink:#e8ebf4; --ink-soft:#9aa3b9; --accent:#8fa4ff; --accent-ink:#0d1020; --accent-soft:#252f52;
   --danger:#ff7a70; --danger-soft:#3a1f22; --good:#5fd08e; --good-soft:#173324; --warn:#f2b54a;
   --shadow:0 1px 2px rgba(0,0,0,.3);
-  --g-skyjo:#3cc6b8; --g-lc:#e8b23f; --g-f7:#ff6f66; --g-7w:#d1a86b; color-scheme:dark}
+  --g-skyjo:#3cc6b8; --g-lc:#e8b23f; --g-f7:#ff6f66; --g-7w:#d1a86b; --g-az:#6fa0ff; color-scheme:dark}
 
 *{box-sizing:border-box}
 html,body{min-height:100%}
@@ -170,6 +170,11 @@ table.scores{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nu
 .coinwrap .coin{position:absolute;left:9px;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe9a0,#d99a00 60%,#9a6a00);box-shadow:inset 0 0 0 1.5px rgba(120,80,0,.5);pointer-events:none}
 .swrow .coinwrap input{color:var(--ink);padding-left:26px}
 .swconv{color:var(--accent);font-weight:700;font-size:.9rem;margin-left:4px}
+.azwall{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;max-width:330px;width:100%;margin:0 auto}
+.az-cell{aspect-ratio:1;max-width:100%;border-radius:9px;border:2px dashed color-mix(in srgb,var(--tc) 60%,transparent);background:color-mix(in srgb,var(--tc) 14%,var(--surface))}
+.az-cell.old{background:var(--tc);border:2px solid color-mix(in srgb,var(--tc) 70%,#000);opacity:.85}
+.az-cell.new{background:var(--tc);border:2px solid var(--ink);box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.az-det{text-align:center;min-height:1.3em}
 .swrow{display:grid;grid-template-columns:minmax(0,1fr) 84px;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}
 .swrow:last-child{border-bottom:0}
 .swrow.sci{grid-template-columns:1fr;gap:8px}
@@ -378,6 +383,21 @@ function f7Player(v,p){
   if(p.bust)return{score:-m,flip:false};
   return{score:base-m+(flip&&(p.choice||'self')==='self'?15:0),flip};
 }
+const AZ_COLS=[{n:'Bleu',c:'#2a6fdb'},{n:'Jaune',c:'#f2b62b'},{n:'Rouge',c:'#d8433b'},{n:'Noir',c:'#2b2f3a'},{n:'Turquoise',c:'#36c2c4'}];
+const azColor=(r,c)=>(c-r+5)%5;
+const AZ_PEN=[1,1,2,2,2,3,3];
+const azPen=n=>AZ_PEN.slice(0,Math.min(n,7)).reduce((a,b)=>a+b,0);
+const azEmpty=()=>[0,1,2,3,4].map(()=>[0,0,0,0,0]);
+function azTile(w,r,c){let h=1,v=1;for(let x=c-1;x>=0&&w[r][x];x--)h++;for(let x=c+1;x<5&&w[r][x];x++)h++;for(let y=r-1;y>=0&&w[y][c];y--)v++;for(let y=r+1;y<5&&w[y][c];y++)v++;return h>1&&v>1?h+v:h>1?h:v}
+function azBonus(w){let rows=0,cols=0,colors=0;for(let r=0;r<5;r++)if(w[r].every(Boolean))rows++;for(let c=0;c<5;c++)if(w.every(row=>row[c]))cols++;
+  for(let k=0;k<5;k++){let n=0;for(let r=0;r<5;r++)for(let c=0;c<5;c++)if(w[r][c]&&azColor(r,c)===k)n++;if(n===5)colors++}return{rows,cols,colors,pts:rows*2+cols*7+colors*10}}
+function azRun(g,rounds){const ids=g.players.map(p=>p.id),W={},T={};ids.forEach(id=>{W[id]=azEmpty();T[id]=0});let ended=false;
+  return rounds.map(r=>{const out={},det={};
+    ids.forEach(id=>{const pr=(r&&r.p&&r.p[id])||{};const pl=(pr.place||[]).slice().sort((a,b)=>a[0]-b[0]);let gain=0;const tiles=[];
+      pl.forEach(([rr,cc])=>{if(W[id][rr][cc])return;W[id][rr][cc]=1;const v=azTile(W[id],rr,cc);gain+=v;tiles.push(v)});
+      const pen=azPen(toInt(pr.floor));const nt=Math.max(0,T[id]+gain-pen);det[id]={gain,pen,tiles,bonus:0};out[id]=nt-T[id];T[id]=nt});
+    if(!ended&&ids.some(id=>W[id].some(row=>row.every(Boolean)))){ended=true;ids.forEach(id=>{const b=azBonus(W[id]);det[id].bonus=b.pts;det[id].b=b;out[id]+=b.pts;T[id]+=b.pts})}
+    return{out,det,walls:JSON.parse(JSON.stringify(W)),ended}})}
 function roundScores(g,r){
   const ids=g.players.map(p=>p.id),out={},meta={};
   if(g.type==='skyjo'){
@@ -388,6 +408,11 @@ function roundScores(g,r){
     ids.forEach(id=>out[id]=lcPlayer(r.exp[id]));
   }else if(g.type==='sevenw'){
     ids.forEach(id=>out[id]=swTotal(g,r.sheet[id]));
+  }else if(g.type==='azul'){
+    let idx=g.rounds.indexOf(r),list=g.rounds;
+    if(idx<0){idx=(typeof UI!=='undefined'&&UI.draft&&UI.draft.index!=null)?UI.draft.index:g.rounds.length;list=g.rounds.slice();list[idx]=r}
+    const last=azRun(g,list.slice(0,idx+1))[idx];
+    ids.forEach(id=>{out[id]=last.out[id];if(last.det[id].bonus)meta[id]='+'+last.det[id].bonus+' bonus'});
   }else{
     ids.forEach(id=>out[id]=0);
     ids.forEach(id=>{
@@ -436,9 +461,11 @@ function endState(g){
   if(g.type==='skyjo')over=vals.some(v=>v>=100);
   else if(g.type==='flip7')over=vals.some(v=>v>=200);
   else if(g.type==='sevenw')over=g.rounds.length>=1;
+  else if(g.type==='azul')over=g.rounds.length>0&&azRun(g,g.rounds).some(x=>x.ended);
   else over=g.rounds.length>=g.nRounds;
   if(!over)return null;
   const best=isLow(g)?Math.min(...vals):Math.max(...vals);
+  if(g.type==='azul'){let w=ids.filter(i=>t[i]===best);if(w.length>1){const run=azRun(g,g.rounds),W=run[run.length-1].walls;const rows=i=>W[i].filter(r=>r.every(Boolean)).length;const m=Math.max(...w.map(rows));w=w.filter(i=>rows(i)===m)}return{winners:w,totals:t}}
   if(g.type==='sevenw'){let w=ids.filter(i=>t[i]===best);let tie=false;if(w.length>1){const r=g.rounds[0];const co=i=>toInt((r.sheet[i]||{}).coins);const m=Math.max(...w.map(co));const w2=w.filter(i=>co(i)===m);tie=w2.length<w.length;w=w2}return{winners:w,totals:t,coinTie:tie}}
   return{winners:ids.filter(i=>t[i]===best),totals:t};
 }
@@ -452,12 +479,14 @@ const GAMES={
   skyjo:{name:'Skyjo',gc:'--g-skyjo',min:2,max:8,variants:{normal:'Classique',action:'Action'},rule:'Fin à 100 points · le plus petit total gagne'},
   flip7:{name:'Flip 7',gc:'--g-f7',min:2,max:18,variants:{classic:'Classique',vengeance:'Vengeance',sanspitie:'Sans pitié'},rule:'Premier à 200 points · le plus gros total gagne'},
   lostcities:{name:'Lost Cities',gc:'--g-lc',min:2,max:2,variants:{standard:'Standard'},rule:'Le plus gros total après les manches gagne'},
+  azul:{name:'Azul',gc:'--g-az',min:2,max:4,variants:{base:'Base'},rule:'Fin quand une ligne du mur est complète'},
   sevenw:{name:'7 Wonders',gc:'--g-7w',min:3,max:7,variants:{base:'Base'},rule:'Décompte final · égalité départagée au trésor'}
 };
 function gameLabel(g){
   if(g.type==='skyjo')return g.variant==='action'?'Skyjo Action':'Skyjo';
   if(g.type==='lostcities')return 'Lost Cities';
   if(g.type==='sevenw')return '7 Wonders';
+  if(g.type==='azul')return 'Azul';
   return {classic:'Flip 7',vengeance:'Flip 7 Vengeance',sanspitie:'Flip 7 Sans pitié'}[g.variant];
 }
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
@@ -526,7 +555,7 @@ function scoreTable(g,editable){
   const t=totals(g);const vals=g.players.map(p=>t[p.id]);
   const best=g.rounds.length?(isLow(g)?Math.min(...vals):Math.max(...vals)):null;
   return `<div class="scroll-x"><table class="scores"><thead><tr><th>Manche</th>${g.players.map(p=>`<th><span class="row" style="gap:6px;justify-content:center;flex-wrap:nowrap"><span class="dot" style="--pc:${p.color}"></span>${esc(p.name)}</span></th>`).join('')}</tr></thead>
-  <tbody>${g.rounds.map((r,i)=>{const{scores,meta}=roundScores(g,r);return `<tr class="${UI.flash===i?'flash':''}" ${editable?`data-a="edit-round" data-i="${i}"`:''}><td>${i+1}${editable?' ✎':''}</td>${g.players.map(p=>`<td class="${scores[p.id]<0?(isLow(g)?'goodnum':'neg'):''}">${fmt(scores[p.id])}${meta[p.id]?`<span class="tag ${meta[p.id]==='Flip 7'?'good':''}">${meta[p.id]}</span>`:''}</td>`).join('')}</tr>`}).join('')||`<tr><td colspan="${g.players.length+1}" class="muted" style="text-align:center;font-family:var(--f-body);font-weight:400">Aucune manche pour l'instant</td></tr>`}</tbody>
+  <tbody>${g.rounds.map((r,i)=>{const{scores,meta}=roundScores(g,r);return `<tr class="${UI.flash===i?'flash':''}" ${editable?`data-a="edit-round" data-i="${i}"`:''}><td>${i+1}${editable?' ✎':''}</td>${g.players.map(p=>`<td class="${scores[p.id]<0?(isLow(g)?'goodnum':'neg'):''}">${fmt(scores[p.id])}${meta[p.id]?`<span class="tag ${meta[p.id]==='Flip 7'||/bonus/.test(meta[p.id])?'good':''}">${meta[p.id]}</span>`:''}</td>`).join('')}</tr>`}).join('')||`<tr><td colspan="${g.players.length+1}" class="muted" style="text-align:center;font-family:var(--f-body);font-weight:400">Aucune manche pour l'instant</td></tr>`}</tbody>
   <tfoot class="${UI.flash!=null?'bump':''}"><tr><td>Total</td>${g.players.map(p=>`<td class="${best!==null&&t[p.id]===best?'lead':''}">${fmt(t[p.id])}</td>`).join('')}</tr></tfoot></table></div>`;
 }
 function niceStep(range){const raw=range/4;const p=Math.pow(10,Math.floor(Math.log10(raw||1)));const f=raw/p;return (f<=1?1:f<=2?2:f<=5?5:10)*p}
@@ -607,6 +636,7 @@ V.game=()=>{
 
 /* Saisie de manche */
 function newDraftData(g){
+  if(g.type==='azul'){const p={};g.players.forEach(pl=>p[pl.id]={place:[],floor:0});return{p}}
   if(g.type==='skyjo')return{raw:{},finisher:null};
   if(g.type==='sevenw'){const sheet={};g.players.forEach(p=>sheet[p.id]={sci:{}});return{sheet}}
   if(g.type==='lostcities'){const exp={};g.players.forEach(p=>{exp[p.id]={};LC_COLORS.forEach(c=>exp[p.id][c.k]={w:0,cards:[]})});return{exp}}
@@ -619,6 +649,7 @@ V.round=()=>{
   if(g.type==='skyjo')body=skyjoEditor(g,d);
   else if(g.type==='lostcities')body=lcEditor(g,d);
   else if(g.type==='sevenw')body=swEditor(g,d);
+  else if(g.type==='azul')body=azEditor(g,d);
   else body=f7Editor(g,d);
   return `<header class="top"><div><p class="eyebrow">${esc(gameLabel(g))}</p><h1>${title}</h1></div></header>
   ${body}
@@ -649,6 +680,22 @@ function swEditor(g,d){
         <p class="small muted" id="sw-sci-adv">${esc(sciAdviceText(sh.sci))}</p></div>`})()}
       </div>`
     :`<div class="swrow"><div class="swl"><span class="dot" style="--pc:${c.c}"></span><div><b>${c.n}${c.coins?` <span class="swconv" id="sw-v-coins">${coinTxt(sh)}</span>`:''}</b>${c.h?`<span class="small muted">${c.h}</span>`:''}</div></div>${c.coins?inp(c.k,sh[c.k],'Trésor (nombre de pièces)').replace('placeholder="0"','placeholder="pièces"'):c.neg?`<span class="negwrap"><span class="minus" aria-hidden="true">−</span>${inp(c.k,sh[c.k],c.n+' (points retirés)')}</span>`:inp(c.k,sh[c.k],c.n)}</div>`).join('')}</div></div>`;
+}
+function azEditor(g,d){
+  const active=d.tab||g.players[0].id;const pr=d.data.p[active];const idx=d.index!=null?d.index:g.rounds.length;
+  const before=idx?azRun(g,g.rounds.slice(0,idx))[idx-1].walls[active]:azEmpty();
+  const list=g.rounds.slice(0,idx).concat([d.data]);const run=azRun(g,list);const det=run[idx].det[active];const sc=roundScores(g,d.data);
+  const has=(r,c)=>pr.place.some(([a,b])=>a===r&&b===c);
+  const cells=[];for(let r=0;r<5;r++)for(let c=0;c<5;c++){const col=AZ_COLS[azColor(r,c)].c,old=before[r][c],now=has(r,c);
+    cells.push(`<button class="az-cell ${old?'old':now?'new':''}" style="--tc:${col}" ${old?'disabled':''} data-a="az-cell" data-r="${r}" data-c="${c}" aria-label="${AZ_COLS[azColor(r,c)].n} ligne ${r+1}"></button>`)}
+  const fl=toInt(pr.floor);
+  return `${playerTabs(g,d,id=>sc.scores[id])}
+  <div class="card"><div class="row between"><p class="eyebrow">Mur de ${esc(g.players.find(p=>p.id===active).name)}</p><span class="scorebig ${sc.scores[active]<0?'neg':''}">${fmt(sc.scores[active])}</span></div>
+    <div class="azwall">${cells.join('')}</div>
+    <p class="small muted az-det">${det.tiles.length?'Tuiles : '+det.tiles.map(v=>'+'+v).join(' '):'Touche les tuiles posées sur le mur cette manche'}${det.pen?` · Plancher −${det.pen}`:''}${det.bonus?` · <b style="color:var(--good)">Bonus de fin +${det.bonus}</b>`:''}</p>
+    <div class="row between"><div><b>Plancher</b><span class="small muted" style="display:block">Tuiles cassées, jeton premier joueur compris</span></div>
+      <span class="stepper"><button class="icon-btn" data-a="az-floor" data-d="-1" aria-label="Moins">−</button><span class="num" style="min-width:1.4ch;text-align:center">${fl}</span><button class="icon-btn" data-a="az-floor" data-d="1" aria-label="Plus">+</button></span></div>
+  </div>`;
 }
 function playerTabs(g,d,scoreFn){
   const active=d.tab||g.players[0].id;
@@ -724,6 +771,7 @@ function aggregate(games){
       if(g.type==='skyjo'){if(r.finisher===p.id)s.fin++;if(meta[p.id]==='×2')s.dbl++;if(v<=0)s.zero++}
       if(g.type==='flip7'){const pr=r.p[p.id]||{};const f=f7Player(g.variant,pr).flip;if(f)s.flip++;if(pr.bust)s.bust++;if(f&&pr.choice&&pr.choice!=='self')s.mean++}
       if(g.type==='sevenw'){const sh=r.sheet[p.id];s.sw=s.sw||{};s.swSum=s.swSum||{};swCats(g).forEach(c=>{const x=swCat(sh,c);if(s.sw[c.k]===undefined||x>s.sw[c.k])s.sw[c.k]=x;s.swSum[c.k]=(s.swSum[c.k]||0)+x})}
+      if(g.type==='azul'){const pr=(r.p&&r.p[p.id])||{};s.casse=(s.casse||0)+toInt(pr.floor)}
       if(g.type==='lostcities')LC_COLORS.forEach(c=>{const e=r.exp[p.id]&&r.exp[p.id][c.k];if(e&&(e.cards.length||e.w)){const x=lcExp(e);s.exp++;if(x>0)s.good++;s.bets+=e.w;if(!s.bestExp||x>s.bestExp.v)s.bestExp={v:x,c:c.in}}});
     })})});
   return P;
@@ -739,7 +787,7 @@ function statTable(ft,P,ids,who){
   if(!ids.length)return '';
   const avg=s=>s.rounds?(s.sum/s.rounds).toFixed(1).replace('.',',').replace(/,0$/,'').replace('-','−'):'–';
   const pct=(x,y)=>y?Math.round(x/y*100)+' %':'–';
-  const extra=ft==='sevenw'?['Point fort',s=>{if(!s.swSum)return '–';const e=SW_CATS.filter(c=>!c.neg&&!c.coins&&s.swSum[c.k]>0).sort((a,b)=>s.swSum[b.k]-s.swSum[a.k])[0];return e?e.n:'–'}]:ft==='skyjo'?['Doublé',s=>s.dbl]:ft==='flip7'?['Flip 7',s=>s.flip]:['Expé. rentables',s=>pct(s.good,s.exp)];
+  const extra=ft==='azul'?['Casse / manche',s=>s.rounds?((s.casse||0)/s.rounds).toFixed(1).replace('.',','):'–']:ft==='sevenw'?['Point fort',s=>{if(!s.swSum)return '–';const e=SW_CATS.filter(c=>!c.neg&&!c.coins&&s.swSum[c.k]>0).sort((a,b)=>s.swSum[b.k]-s.swSum[a.k])[0];return e?e.n:'–'}]:ft==='skyjo'?['Doublé',s=>s.dbl]:ft==='flip7'?['Flip 7',s=>s.flip]:['Expé. rentables',s=>pct(s.good,s.exp)];
   const cols=[['Parties',s=>s.played],['Victoires',s=>s.wins],[ft==='sevenw'?'Moyenne':'Moy. / manche',avg],[ft==='skyjo'?'Meilleure (plus bas)':ft==='sevenw'?'Meilleur score':'Meilleure manche',s=>s.best===null?'–':fmt(s.best)],extra];
   return `<div class="card"><p class="eyebrow">Le détail</p><div class="scroll-x"><table class="scores ptable"><thead><tr><th>Joueur</th>${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead>
   <tbody>${ids.map(id=>{const s=P[id],p=who(id);return `<tr><td><span class="row" style="gap:6px;flex-wrap:nowrap"><span class="dot" style="--pc:${p.color}"></span>${esc(p.name)}</span></td>${cols.map(c=>`<td>${c[1](s)}</td>`).join('')}</tr>`}).join('')}</tbody></table></div></div>`;
@@ -795,6 +843,10 @@ V.stats=()=>{
         award(P,'bust',{title:'Casse-cou',line:s=>`a sauté ${s.bust} fois`}),
         award(P,'best',{title:'La grosse manche',line:s=>`${fmt(s.best)} points d'un coup`}),
         games.some(g=>g.variant==='sanspitie')?award(P,'mean',{title:'Sans pitié',line:s=>`a donné ${s.mean} fois −15`}):null];
+  }else if(ft==='azul'){
+    aw=[award(P,'best',{title:'La grosse manche',line:s=>`${fmt(s.best)} points en une manche`}),
+        award(P,'casse',{title:'Casse-tout',line:s=>`${s.casse} tuiles cassées`}),
+        (()=>{const ids=Object.keys(P).filter(id=>P[id].rounds>=5).sort((x,y)=>(P[x].casse||0)/P[x].rounds-(P[y].casse||0)/P[y].rounds);return ids.length?{id:ids[0],title:'Main de velours',line:`${((P[ids[0]].casse||0)/P[ids[0]].rounds).toFixed(1).replace('.',',')} tuile cassée par manche`}:null})()];
   }else if(ft==='sevenw'){
     const top=(k,title,line)=>{const ids=Object.keys(P).filter(id=>P[id].sw&&P[id].sw[k]>0).sort((x,y)=>P[y].sw[k]-P[x].sw[k]);return ids.length?{id:ids[0],title,line:line(P[ids[0]].sw[k])}:null};
     aw=[top('sci','Le savant',v=>`${v} points de science`),top('mil','Le général',v=>`${v} points militaires`),top('wonder','Grand bâtisseur',v=>`${v} points de merveille`),
@@ -934,6 +986,8 @@ A['pe-save']=()=>{const p=player(UI.editPlayer);const name=document.getElementBy
 A['stat-mode']=d=>{UI.statMode=d.m||null;render()};
 A['fo-a']=d=>{UI.foA=d.id;render()};
 A['fo-b']=d=>{UI.foB=d.id;render()};
+A['az-cell']=d=>{const pr=UI.draft.data.p[UI.draft.tab];const r=+d.r,c=+d.c;const had=pr.place.some(([a,b])=>a===r&&b===c);pr.place=pr.place.filter(([a])=>a!==r);if(!had)pr.place.push([r,c]);render()};
+A['az-floor']=d=>{const pr=UI.draft.data.p[UI.draft.tab];pr.floor=Math.min(14,Math.max(0,toInt(pr.floor)+(+d.d)));render()};
 A['setup-exp']=d=>{const e=UI.setup.exp,i=e.indexOf(d.k);i>=0?e.splice(i,1):e.push(d.k);render()};
 A['setup-variant']=d=>{UI.setup.variant=d.variant;render()};
 A['setup-toggle']=d=>{const s=UI.setup.selected,i=s.indexOf(d.id);i>=0?s.splice(i,1):s.push(d.id);UI.setupErr='';render()};
