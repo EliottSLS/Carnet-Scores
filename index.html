@@ -480,6 +480,18 @@ function pushChanges(){
 }
 window.pushChanges=pushChanges;
 let renderPending=false;
+const NAV=[],TRANSIENT=['round','reveal','wheel','chooser','setup'];let navRestoring=false,ignorePop=0;
+function navSnap(){return{view:UI.view,gameId:UI.gameId,setup:UI.setup,draft:UI.draft,statGame:UI.statGame,statVar:UI.statVar,ch:UI.ch,wheel:UI.wheel,wheelBack:UI.wheelBack,revealStep:UI.revealStep,duel:0}}
+function navPush(view,extra){if(navRestoring)return;
+  if(view===UI.view&&(extra.gameId===undefined||extra.gameId===UI.gameId))return;
+  if(TRANSIENT.includes(UI.view)&&!TRANSIENT.includes(view)){const top=NAV[NAV.length-1];
+    if(top&&top.view===view&&(extra.gameId===undefined||top.gameId===extra.gameId)){NAV.pop();ignorePop++;history.back()}
+    return}
+  NAV.push(navSnap());history.pushState({n:NAV.length},'')}
+addEventListener('popstate',()=>{if(ignorePop){ignorePop--;return}const prev=NAV.pop();if(!prev)return;
+  try{clearTimeout(duelTimer);clearInterval(teamTimer)}catch(_){}
+  if(UI.view==='chooser')resetChooser(true);
+  navRestoring=true;const{view,...rest}=prev;go(view,rest);navRestoring=false});
 function softRender(){const busy=['round','wheel','reveal','chooser'].includes(UI.view)||(document.activeElement&&/INPUT|TEXTAREA/.test(document.activeElement.tagName));if(busy){renderPending=true;return}render()}
 window.onRemote=(col,docs)=>{let changed=false;
   docs.forEach(d=>{const i=S[col].findIndex(e=>e.id===d.id);
@@ -903,7 +915,7 @@ function render(){
   if(UI.view==='game')attachChart();
   if(UI.view==='game'||UI.view==='round')wake(true);else wake(false);
 }
-function go(view,extra){renderPending=false;Object.assign(UI,{view,setupErr:'',roundErr:'',playerErr:'',confirmDelGame:false,confirmDelRound:false,confirmDelPlayer:null,dataMode:'',importErr:'',copied:false},extra||{});render();window.scrollTo(0,0)}
+function go(view,extra){renderPending=false;navPush(view,extra||{});Object.assign(UI,{view,setupErr:'',roundErr:'',playerErr:'',confirmDelGame:false,confirmDelRound:false,confirmDelPlayer:null,dataMode:'',importErr:'',copied:false},extra||{});render();window.scrollTo(0,0)}
 
 let wl=null;
 async function wake(on){try{if(on&&!wl&&navigator.wakeLock){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>wl=null)}else if(!on&&wl){await wl.release();wl=null}}catch(e){wl=null}}

@@ -70,7 +70,21 @@ A['sync-leave']=()=>{window.FB&&FB.start(null);SYNC.gid=null;UI.confirmLeave=fal
 A['setup-exp']=""")
 rep("L'import remplace toutes les données actuelles.", "L'import remplace toutes les données actuelles${SYNC.gid?', pour tout le groupe':''}.")
 # rendu différé après navigation
-rep("function go(view,extra){", "function go(view,extra){renderPending=false;")
+rep("function go(view,extra){", "function go(view,extra){renderPending=false;navPush(view,extra||{});")
+# ---------- bouton retour Android ----------
+rep("let renderPending=false;", r"""let renderPending=false;
+const NAV=[],TRANSIENT=['round','reveal','wheel','chooser','setup'];let navRestoring=false,ignorePop=0;
+function navSnap(){return{view:UI.view,gameId:UI.gameId,setup:UI.setup,draft:UI.draft,statGame:UI.statGame,statVar:UI.statVar,ch:UI.ch,wheel:UI.wheel,wheelBack:UI.wheelBack,revealStep:UI.revealStep,duel:0}}
+function navPush(view,extra){if(navRestoring)return;
+  if(view===UI.view&&(extra.gameId===undefined||extra.gameId===UI.gameId))return;
+  if(TRANSIENT.includes(UI.view)&&!TRANSIENT.includes(view)){const top=NAV[NAV.length-1];
+    if(top&&top.view===view&&(extra.gameId===undefined||top.gameId===extra.gameId)){NAV.pop();ignorePop++;history.back()}
+    return}
+  NAV.push(navSnap());history.pushState({n:NAV.length},'')}
+addEventListener('popstate',()=>{if(ignorePop){ignorePop--;return}const prev=NAV.pop();if(!prev)return;
+  try{clearTimeout(duelTimer);clearInterval(teamTimer)}catch(_){}
+  if(UI.view==='chooser')resetChooser(true);
+  navRestoring=true;const{view,...rest}=prev;go(view,rest);navRestoring=false});""")
 # démarrage
 rep("const boot=d=>{if(d&&d.UI)UI=d.UI;render()};", "const boot=d=>{if(d&&d.UI)UI=d.UI;render();startSync()};")
 rep(".swconv{", """.sync-pill{font-size:.78rem;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--surface-2);color:var(--ink-soft)}
