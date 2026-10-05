@@ -1,6 +1,6 @@
 # Construit l'appli installable (dossier pwa/) à partir de carnet-scores.html
 import re, json, pathlib
-SRC = pathlib.Path(__file__).parent/'carnet-scores.html'.read_text()
+SRC = (pathlib.Path(__file__).parent/'carnet-scores.html').read_text()
 OUT = pathlib.Path(__file__).parent.parent
 FB_VER = '10.12.2'
 CFG = {
