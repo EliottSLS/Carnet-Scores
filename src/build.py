@@ -77,8 +77,10 @@ const NAV=[],TRANSIENT=['round','reveal','wheel','chooser','setup'];let navResto
 function navSnap(){return{view:UI.view,gameId:UI.gameId,setup:UI.setup,draft:UI.draft,statGame:UI.statGame,statVar:UI.statVar,ch:UI.ch,wheel:UI.wheel,wheelBack:UI.wheelBack,revealStep:UI.revealStep,duel:0}}
 function navPush(view,extra){if(navRestoring)return;
   if(view===UI.view&&(extra.gameId===undefined||extra.gameId===UI.gameId))return;
-  if(TRANSIENT.includes(UI.view)&&!TRANSIENT.includes(view)){const top=NAV[NAV.length-1];
-    if(top&&top.view===view&&(extra.gameId===undefined||top.gameId===extra.gameId)){NAV.pop();ignorePop++;history.back()}
+  if(TRANSIENT.includes(UI.view)&&!TRANSIENT.includes(view)){let k=0;
+    while(NAV.length&&TRANSIENT.includes(NAV[NAV.length-1].view)){NAV.pop();k++}
+    const top=NAV[NAV.length-1];if(top&&top.view===view&&(extra.gameId===undefined||top.gameId===extra.gameId)){NAV.pop();k++}
+    if(k){ignorePop++;history.go(-k)}
     return}
   NAV.push(navSnap());history.pushState({n:NAV.length},'')}
 addEventListener('popstate',()=>{if(ignorePop){ignorePop--;return}const prev=NAV.pop();if(!prev)return;

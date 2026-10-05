@@ -285,6 +285,7 @@ table.scores{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nu
 @keyframes hop{50%{transform:translateY(-3px)}}
 /* Roue et équipes */
 .who-btn{border-style:dashed}
+.wheel-view .rv-foot .btn{min-width:220px}
 .wheel-box{flex:1;display:flex;align-items:center;justify-content:center;padding:16px;min-height:0}
 .wheel-svg{width:min(88vw,380px);height:auto;max-height:60vh;overflow:visible}
 .wh-txt{fill:#fff;font-family:var(--f-display);font-weight:800;font-size:15px;paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:3px}
@@ -508,8 +509,10 @@ const NAV=[],TRANSIENT=['round','reveal','wheel','chooser','setup'];let navResto
 function navSnap(){return{view:UI.view,gameId:UI.gameId,setup:UI.setup,draft:UI.draft,statGame:UI.statGame,statVar:UI.statVar,ch:UI.ch,wheel:UI.wheel,wheelBack:UI.wheelBack,revealStep:UI.revealStep,duel:0}}
 function navPush(view,extra){if(navRestoring)return;
   if(view===UI.view&&(extra.gameId===undefined||extra.gameId===UI.gameId))return;
-  if(TRANSIENT.includes(UI.view)&&!TRANSIENT.includes(view)){const top=NAV[NAV.length-1];
-    if(top&&top.view===view&&(extra.gameId===undefined||top.gameId===extra.gameId)){NAV.pop();ignorePop++;history.back()}
+  if(TRANSIENT.includes(UI.view)&&!TRANSIENT.includes(view)){let k=0;
+    while(NAV.length&&TRANSIENT.includes(NAV[NAV.length-1].view)){NAV.pop();k++}
+    const top=NAV[NAV.length-1];if(top&&top.view===view&&(extra.gameId===undefined||top.gameId===extra.gameId)){NAV.pop();k++}
+    if(k){ignorePop++;history.go(-k)}
     return}
   NAV.push(navSnap());history.pushState({n:NAV.length},'')}
 addEventListener('popstate',()=>{if(ignorePop){ignorePop--;return}const prev=NAV.pop();if(!prev)return;
@@ -658,7 +661,6 @@ V.game=()=>{
   ${done?`<div class="card"><p class="eyebrow">Classement</p><div class="list">${ranking(g,t).map((p,i)=>`<div><span class="num" style="width:1.6ch;color:var(--ink-soft)">${i+1}</span><span class="avatar" style="--pc:${p.color}">${avt(p)}</span><b class="grow ellipsis">${esc(p.name)}${g.winners.includes(p.id)?' 🏆':''}</b><span class="num" style="font-size:1.2rem">${fmt(t[p.id])}</span></div>`).join('')}</div></div>`:''}
   ${hidden?`<div class="banner reveal-cta"><h2>Tous les scores sont saisis</h2><button class="btn primary" data-a="reveal">Révéler le classement</button></div>`:''}
   ${g.type==='sevenw'?swTable(g,!done,hidden):scoreTable(g,!done)}
-  ${!done&&!g.rounds.length&&g.type!=='skyjo'?`<button class="btn block who-btn" data-a="wheel" data-src="game">Qui commence ? Tirer au sort</button>`:''}
   ${!done&&!end&&!hidden?`<button class="btn primary block" data-a="new-round">${g.type==='sevenw'?'Saisir le décompte final':'Saisir la manche '+(g.rounds.length+1)}</button>`:''}
   ${scoreChart(g)}
   ${done?(UI.confirmDelGame?`<div class="card"><p>Supprimer cette partie de l'historique ? Les stats seront recalculées.</p><div class="row"><button class="btn danger" data-a="del-game">Supprimer</button><button class="btn" data-a="cancel-del-game">Garder</button></div></div>`:`<button class="btn ghost" data-a="ask-del-game">Supprimer cette partie</button>`)
@@ -929,14 +931,14 @@ V.wheel=()=>{
   let body='';
   if(w.mode==='one'){
     body=`${wheelSVG(ps,w.angle,w.spinning?'spin':w.result!=null?'done':'idle',w.result)}<div class="rv-foot">${w.result!=null&&!w.spinning?`<p class="rv-win">${esc(ps[w.result].name)} commence !</p>`:`<p class="rv-win" style="opacity:${w.spinning?1:.5}">${w.spinning?'…':'Prêts ?'}</p>`}
-      <button class="btn primary" data-a="wheel-spin" ${w.spinning?'disabled':''}>${w.result!=null?'Relancer':'Lancer la roue'}</button></div>`;
+      ${w.result!=null&&!w.spinning&&w.back==='setup'?`<button class="btn primary" data-a="wheel-start">Lancer la partie</button><button class="btn" data-a="wheel-spin">Relancer</button>`:`<button class="btn primary" data-a="wheel-spin" ${w.spinning?'disabled':''}>${w.result!=null?'Relancer':'Lancer la roue'}</button>`}</div>`;
   }else{
     const tc=TEAM_COLORS;const teams=Array.from({length:w.teams},()=>[]);(w.assign||[]).slice(0,w.shown).forEach(([id,t])=>teams[t].push(ps.find(p=>p.id===id)));
     const waiting=w.assign?ps.filter(p=>!w.assign.slice(0,w.shown).some(([id])=>id===p.id)):ps;
     body=`<div class="team-wrap">${maxT<2?`<p class="ch-msg err" style="position:static;transform:none">Il faut au moins 4 joueurs pour faire des équipes de 2.</p>`:`
       <div class="pool">${waiting.map(p=>`<span class="tchip" style="--pc:${p.color}">${esc(p.name)}</span>`).join('')||'<span class="small" style="color:#aab2c8">Tout le monde est placé</span>'}</div>
       <div class="teams" style="--nt:${w.teams}">${teams.map((tm,i)=>`<div class="team" style="--tc:${tc[i]}"><b>Équipe ${i+1}</b>${tm.map((p,j)=>`<span class="tchip ${w.assign&&w.assign[w.shown-1]&&w.assign[w.shown-1][0]===p.id?'land':''}" style="--pc:${p.color}">${esc(p.name)}</span>`).join('')}</div>`).join('')}</div>`}</div>
-      <div class="rv-foot">${maxT>=2?`<button class="btn primary" data-a="team-go" ${w.assign&&w.shown<w.assign.length?'disabled':''}>${w.assign?'Refaire le tirage':'Former les équipes'}</button>`:''}</div>`;
+      <div class="rv-foot">${maxT>=2?(w.assign&&w.shown>=w.assign.length&&w.back==='setup'?`<button class="btn primary" data-a="wheel-start">Lancer la partie</button><button class="btn" data-a="team-go">Refaire le tirage</button>`:`<button class="btn primary" data-a="team-go" ${w.assign&&w.shown<w.assign.length?'disabled':''}>${w.assign?'Refaire le tirage':'Former les équipes'}</button>`):''}</div>`;
   }
   return `<div class="chooser wheel-view"><div class="ch-bar"><button class="icon-btn" data-a="wheel-close" aria-label="Fermer">←</button>
     <button class="chip ${w.mode==='one'?'on':''}" data-a="wheel-mode" data-m="one">Premier joueur</button><button class="chip ${w.mode==='teams'?'on':''}" data-a="wheel-mode" data-m="teams">Équipes</button>
@@ -1068,6 +1070,10 @@ A['stat-var']=d=>{UI.statVar=d.v||null;render()};
 let teamTimer=null;
 A.wheel=d=>{const ps=d.src==='setup'?UI.setup.selected.map(player).filter(Boolean):gameById(UI.gameId).players;
   UI.wheel={players:ps,back:d.src,mode:'one',teams:2,angle:0,result:null,spinning:false};UI.wheelBack={view:UI.view,setup:UI.setup,gameId:UI.gameId};go('wheel')};
+A['wheel-start']=()=>{const w=UI.wheel,b=UI.wheelBack;clearInterval(teamTimer);UI.setup=b.setup;
+  if(w.mode==='one'&&w.result!=null){const first=w.players[w.result].id,sel=UI.setup.selected,k=sel.indexOf(first);if(k>0)UI.setup.selected=sel.slice(k).concat(sel.slice(0,k))}
+  else if(w.mode==='teams'&&w.assign){const ord=[];for(let t=0;t<w.teams;t++)w.assign.filter(([,x])=>x===t).forEach(([id])=>ord.push(id));UI.setup.selected=ord}
+  A.start()};
 A['wheel-close']=()=>{clearInterval(teamTimer);const b=UI.wheelBack;go(b.view,{setup:b.setup,gameId:b.gameId})};
 A['wheel-mode']=d=>{clearInterval(teamTimer);UI.wheel.mode=d.m;UI.wheel.assign=null;render()};
 A['wheel-teams']=d=>{const w=UI.wheel;clearInterval(teamTimer);w.teams=Math.min(Math.floor(w.players.length/2),Math.max(2,w.teams+(+d.d)));w.assign=null;render()};
