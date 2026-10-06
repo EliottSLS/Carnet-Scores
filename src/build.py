@@ -53,14 +53,15 @@ async function groupId(code){const data=new TextEncoder().encode('carnet-scores:
 function startSync(){if(!SYNC.gid)return;const go=()=>window.FB&&FB.start(SYNC.gid);if(window.FB)go();else addEventListener('fb-ready',go,{once:true})}""")
 
 # carte de synchro dans l'onglet Joueurs
-rep('  <div class="card"><div><h3>Sauvegarde</h3>', r"""  <div class="card"><div class="row between"><h3>Groupe partagé</h3>${SYNC.gid?syncPill():''}</div>
+rep('  <div class="card"><div><h3>Sauvegarde</h3>', r"""  ${shareCard()}
+  <div class="card"><div class="row between"><h3>Groupe partagé</h3>${SYNC.gid?syncPill():''}</div>
     ${SYNC.gid?(UI.confirmLeave?`<p>Quitter le groupe ? Les parties restent sur ce téléphone mais ne seront plus partagées.</p><div class="row"><button class="btn danger" data-a="sync-leave">Quitter</button><button class="btn" data-a="sync-cancel">Rester</button></div>`
       :`<p class="muted small">Les joueurs et les parties sont partagés avec les téléphones du groupe.</p><div class="row"><button class="btn ghost" data-a="sync-ask-leave">Quitter le groupe</button></div>`)
     :`<p class="muted small">Entre le même code sur chaque téléphone pour partager joueurs et parties.</p><form class="row" data-f="sync-join" style="flex-wrap:nowrap"><input type="text" id="sync-code" placeholder="Code de groupe" autocomplete="off" autocapitalize="none" spellcheck="false"><button class="btn primary" type="submit">Rejoindre</button></form>${UI.syncErr?`<p class="err">${esc(UI.syncErr)}</p>`:''}`}
   </div>
   <div class="card"><div><h3>Sauvegarde</h3>""")
 rep("document.addEventListener('submit',e=>{e.preventDefault();const f=e.target.dataset.f;", r"""document.addEventListener('submit',async e=>{e.preventDefault();const f=e.target.dataset.f;
-  if(f==='sync-join'){const code=document.getElementById('sync-code').value;if(code.trim().length<6){UI.syncErr='Le code doit faire au moins 6 caractères.';render();return}
+  if(f==='sync-join'){const code=document.getElementById('sync-code').value;const inv=code.match(/#g=([0-9a-f]{64})/);if(inv){joinGid(inv[1]);UI.syncErr='';render();return}if(code.trim().length<6){UI.syncErr='Le code doit faire au moins 6 caractères.';render();return}
     try{SYNC.gid=await groupId(code)}catch(_){UI.syncErr='Impossible de créer le code sur ce navigateur.';render();return}
     try{localStorage.setItem(GROUP_KEY,JSON.stringify({gid:SYNC.gid}))}catch(_){}
     synced={players:{},games:{}};saveSynced();UI.syncErr='';window.syncStatus('connecting');startSync();render();return}""")
@@ -88,7 +89,35 @@ addEventListener('popstate',()=>{if(ignorePop){ignorePop--;return}const prev=NAV
   if(UI.view==='chooser')resetChooser(true);
   navRestoring=true;const{view,...rest}=prev;go(view,rest);navRestoring=false});""")
 # démarrage
-rep("const boot=d=>{if(d&&d.UI)UI=d.UI;render()};", "const boot=d=>{if(d&&d.UI)UI=d.UI;render();startSync()};")
+rep("const boot=d=>{if(d&&d.UI)UI=d.UI;render()};", "const boot=d=>{if(d&&d.UI)UI=d.UI;checkInvite();render();startSync()};")
+rep("function go(view,extra){renderPending=false;", "function go(view,extra){renderPending=false;UI.toast=null;")
+rep("function startSync(){", r"""const APP_URL='https://eliottsls.github.io/Carnet-Scores/';
+function appUrl(){return /^https?:/.test(location.protocol)?location.origin+location.pathname:APP_URL}
+function inviteLink(){return appUrl()+(SYNC.gid&&UI.shareGroup!==false?'#g='+SYNC.gid:'')}
+function qrSvg(text){if(typeof qrcode!=='function')return '';const q=qrcode(0,'M');q.addData(text);q.make();const n=q.getModuleCount();let d='';
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))d+=`M${c} ${r}h1v1h-1z`;
+  return `<svg viewBox="-3 -3 ${n+6} ${n+6}" class="qr" shape-rendering="crispEdges" role="img" aria-label="QR code du lien"><rect x="-3" y="-3" width="${n+6}" height="${n+6}" rx="2" fill="#fff"/><path d="${d}" fill="#1b2133"/></svg>`}
+function shareCard(){const withG=SYNC.gid&&UI.shareGroup!==false;
+  return `<div class="card"><h3>Inviter quelqu'un</h3>
+    ${SYNC.gid?`<div class="row"><button class="chip ${withG?'on':''}" data-a="share-mode" data-m="g">Appli + groupe</button><button class="chip ${withG?'':'on'}" data-a="share-mode" data-m="a">Appli seule</button></div>`:''}
+    <div class="share-box">${qrSvg(inviteLink())}</div>
+    <p class="muted small" style="text-align:center">${withG?"Scanné avec l'appareil photo, il ouvre l'appli et rejoint votre groupe. À ne donner qu'à tes proches.":"Scanné avec l'appareil photo, il ouvre l'appli."}</p>
+    <div class="row" style="justify-content:center">${navigator.share?`<button class="btn primary" data-a="share-send">Envoyer le lien</button>`:''}<button class="btn" data-a="share-copy">${UI.linkCopied?'Lien copié':'Copier le lien'}</button></div></div>`}
+function joinGid(g){SYNC.gid=g;try{localStorage.setItem(GROUP_KEY,JSON.stringify({gid:g}))}catch(_){}synced={players:{},games:{}};saveSynced();UI.pendingJoin=null;window.syncStatus('connecting');startSync()}
+function checkInvite(){const m=location.hash.match(/^#g=([0-9a-f]{64})$/);if(!m)return false;try{history.replaceState(history.state,'',location.pathname+location.search)}catch(_){}
+  if(SYNC.gid===m[1])UI.toast='Tu fais déjà partie de ce groupe.';else if(SYNC.gid)UI.pendingJoin=m[1];else{joinGid(m[1]);UI.toast='Groupe rejoint ! Les joueurs et les parties arrivent.'}return true}
+addEventListener('hashchange',()=>{if(checkInvite())go('home')});
+function inviteBanner(){if(UI.pendingJoin)return `<div class="card"><p><b>Ce lien t'invite dans un autre groupe.</b> Le rejoindre ? Tes parties actuelles restent sur ce téléphone mais ne seront plus partagées.</p><div class="row"><button class="btn primary" data-a="invite-yes">Rejoindre</button><button class="btn" data-a="invite-no">Ignorer</button></div></div>`;
+  return UI.toast?`<div class="banner"><p><b>${esc(UI.toast)}</b></p></div>`:''}
+function startSync(){""")
+rep("A['setup-exp']=", """A['share-mode']=d=>{UI.shareGroup=d.m==='g';UI.linkCopied=false;render()};
+A['share-send']=()=>{navigator.share({title:'Carnet de Scores',text:'Viens compter les points avec nous !',url:inviteLink()}).catch(()=>{})};
+A['share-copy']=()=>{try{navigator.clipboard.writeText(inviteLink()).then(()=>{UI.linkCopied=true;render()},()=>{})}catch(_){}};
+A['invite-yes']=()=>{joinGid(UI.pendingJoin);UI.toast='Groupe rejoint ! Les joueurs et les parties arrivent.';render()};
+A['invite-no']=()=>{UI.pendingJoin=null;render()};
+A['setup-exp']=""")
+rep("V.home=()=>{\n", "V.home=()=>inviteBanner()+homeView();\nconst homeView=()=>{\n")
+rep(".swconv{", ".share-box{display:flex;justify-content:center}\n.qr{width:210px;height:210px;border-radius:14px;box-shadow:var(--shadow)}\n.swconv{")
 rep(".swconv{", """.sync-pill{font-size:.78rem;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--surface-2);color:var(--ink-soft)}
 .sync-pill[data-state="online"]{background:var(--good-soft);color:var(--good)}
 .sync-pill[data-state="error"]{background:var(--danger-soft);color:var(--danger)}
@@ -150,7 +179,8 @@ head = """<!doctype html>
 """
 # séparer le contenu head (title/link/style) du body
 i = s.index('<div class="wrap" id="app"></div>')
-html = head + s[:i] + '</head><body>\n' + s[i:] + '\n' + module + '\n</body></html>\n'
+qrlib = (pathlib.Path(__file__).parent/'vendor'/'qrcode.js').read_text()
+html = head + '<script>' + qrlib + '</script>\n' + s[:i] + '</head><body>\n' + s[i:] + '\n' + module + '\n</body></html>\n'
 OUT.mkdir(exist_ok=True)
 (OUT / 'index.html').write_text(html)
 
