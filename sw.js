@@ -1,5 +1,5 @@
 // Carnet de Scores — fonctionnement hors ligne
-const V='carnet-d7e83ff2';
+const V='carnet-2614c7c7';
 const SHELL=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./icon-180.png'];
 const EXT=['www.gstatic.com','fonts.googleapis.com','fonts.gstatic.com'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
