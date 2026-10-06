@@ -466,6 +466,10 @@ body.disco #app,body.disco .tabbar{animation:disco 1.1s linear infinite}
 .cr-die{width:84px;height:84px;padding:0;color:#2541b2;animation:float 3s ease-in-out infinite}
 @keyframes float{50%{transform:translateY(-6px) rotate(6deg)}}
 .cr-hero h1{color:#f1f3fa;font-size:2.1rem;margin-top:8px}
+.cr-name{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+.cr-reset{background:#2a1418;border:1.5px solid #ff7a70;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px;color:#f1f3fa}
+.chooser .cr-reset .btn.danger{background:#ff7a70;color:#2a0d10;border-color:transparent}
+.cr-reset span{color:#d6b4b8;font-size:.86rem}
 .cr-by{color:#f1f3fa;font-size:1.15rem;margin:0}.cr-by b{color:#ffc22e}
 .cr-sub{color:#8a92ab;font-size:.82rem;margin:0}
 .cr-sec{display:flex;flex-direction:column;gap:10px}
@@ -1145,7 +1149,10 @@ const diceTap=(d,el)=>{if(lpFired){lpFired=false;return}if(el){el.classList.remo
 let lpTimer=null,lpFired=false;
 document.addEventListener('pointerdown',e=>{if(!e.target.closest||!e.target.closest('.home-dice'))return;lpFired=false;clearTimeout(lpTimer);
   lpTimer=setTimeout(()=>{lpFired=true;try{navigator.vibrate&&navigator.vibrate(30)}catch(_){}go('credits')},1100)});
-['pointerup','pointercancel'].forEach(t=>document.addEventListener(t,()=>clearTimeout(lpTimer)));
+let rsTimer=null;
+document.addEventListener('pointerdown',e=>{if(!e.target.closest||!e.target.closest('.cr-name'))return;clearTimeout(rsTimer);
+  rsTimer=setTimeout(()=>{try{navigator.vibrate&&navigator.vibrate([30,40,30])}catch(_){}UI.askReset=true;render();window.scrollTo(0,0)},2000)});
+['pointerup','pointercancel'].forEach(t=>document.addEventListener(t,()=>{clearTimeout(lpTimer);clearTimeout(rsTimer)}));
 function nightBanner(){const n=new Date(),h=n.getHours();if(h<1||h>=5)return '';setTimeout(()=>eggFound('night'),900);
   return `<div class="card night"><b>🌙 Encore une dernière ?</b><span class="small muted">Il est ${h} h ${String(n.getMinutes()).padStart(2,'0')}, mais qui compte ?</span></div>`}
 function kamikaze(g,id){if(g.type!=='flip7'||g.rounds.length<3)return false;return g.rounds.slice(-3).every(r=>r.p&&r.p[id]&&r.p[id].bust)}
@@ -1171,7 +1178,7 @@ let motionAsked=false,lastShake=0,prevAcc=null;
 function askMotion(){if(motionAsked)return;motionAsked=true;try{if(window.DeviceMotionEvent&&typeof DeviceMotionEvent.requestPermission==='function')DeviceMotionEvent.requestPermission().catch(()=>{})}catch(_){}}
 addEventListener('devicemotion',e=>{if(UI.view!=='wheel'||!UI.wheel||UI.wheel.mode!=='one'||UI.wheel.spinning)return;const a=e.accelerationIncludingGravity;if(!a||a.x==null)return;
   if(prevAcc){const d=Math.abs(a.x-prevAcc.x)+Math.abs(a.y-prevAcc.y)+Math.abs(a.z-prevAcc.z);const now=Date.now();if(d>28&&now-lastShake>2000){lastShake=now;eggFound('shake');A['wheel-spin']()}}prevAcc={x:a.x,y:a.y,z:a.z}});
-V.credits=()=>{setTimeout(()=>eggFound('credits'),700);const done=S.games.filter(g=>g.status==='done'),seen=eggsSeen();
+V.credits=()=>{if(!UI.skipCredEgg)setTimeout(()=>{if(UI.view==='credits'&&!UI.skipCredEgg)eggFound('credits')},700);const done=S.games.filter(g=>g.status==='done'),seen=eggsSeen();
   const rounds=S.games.reduce((n,g)=>n+g.rounds.length,0);let pts=0,flips=0,cards=0,broken=0;
   S.games.forEach(g=>{const t=totals(g);g.players.forEach(p=>{if(t[p.id]>0)pts+=t[p.id]});
     g.rounds.forEach(r=>{if(g.type==='flip7')g.players.forEach(p=>{const x=(r.p||{})[p.id]||{};if(f7Player(g.variant,x).flip)flips++;cards+=(x.nums||[]).length});
@@ -1181,7 +1188,8 @@ V.credits=()=>{setTimeout(()=>eggFound('credits'),700);const done=S.games.filter
   const stat=(v,l)=>`<div class="cr-stat"><b>${v}</b><span>${l}</span></div>`;
   return `<div class="chooser credits"><div class="ch-bar"><button class="icon-btn" data-a="nav" data-v="home" aria-label="Retour">←</button><span class="eyebrow" style="color:#aab2c8">Les coulisses</span></div>
   <div class="cr-body">
-    <div class="cr-hero"><button class="cr-die" data-a="cr-roll" aria-label="Lancer le dé">${dieSvg(5)}</button><h1>Carnet de Scores</h1><p class="cr-by">Imaginé et conçu par <b>Eliott</b></p><p class="cr-sub">Version ${APP_VERSION} · codé avec l'aide de Claude</p></div>
+    ${UI.askReset?`<div class="cr-reset"><b>Effacer les secrets découverts sur ce téléphone ?</b><span>La chasse recommence de zéro. Les parties ne sont pas touchées.</span><div class="row"><button class="btn danger" data-a="egg-reset-yes">Tout effacer</button><button class="btn" data-a="egg-reset-no">Garder</button></div></div>`:''}
+    <div class="cr-hero"><button class="cr-die" data-a="cr-roll" aria-label="Lancer le dé">${dieSvg(5)}</button><h1>Carnet de Scores</h1><p class="cr-by">Imaginé et conçu par <b class="cr-name">Eliott</b></p><p class="cr-sub">Version ${APP_VERSION} · codé avec l'aide de Claude</p></div>
     <div class="cr-sec"><p class="eyebrow">Les chiffres qui comptent</p><div class="cr-grid">${stat(done.length,'parties terminées')}${stat(rounds,'manches saisies')}${stat(pts,'points marqués')}${stat(fmtT(mins),'de jeu (environ)')}${stat(flips,'Flip 7 réussis')}${stat(cards,'cartes de Flip 7 posées')}${stat(broken,'tuiles Azul cassées')}${stat(S.players.length,'joueurs inscrits')}</div></div>
     <div class="cr-sec"><p class="eyebrow">Secrets découverts · ${seen.length} / ${EGGS.length}</p><div class="cr-eggs">${EGGS.map(([id,n,h])=>seen.includes(id)?`<div class="cr-egg on"><b>🥚 ${n}</b><span>${h}</span></div>`:`<div class="cr-egg"><b>❓ ???</b><span>Encore caché…</span></div>`).join('')}</div></div>
     <div class="cr-sec"><p class="eyebrow">Règlement intérieur</p><ol class="cr-rules"><li>Le perdant range la boîte.</li><li>Contester un score coûte une tournée de chips.</li><li>« Juste une dernière » n'est jamais la dernière.</li><li>L'appli a toujours raison, surtout quand tu perds.</li></ol></div>
@@ -1216,7 +1224,7 @@ function render(){
   if(UI.view==='game')attachChart();
   if(UI.view==='game'||UI.view==='round')wake(true);else wake(false);
 }
-function go(view,extra){Object.assign(UI,{view,setupErr:'',roundErr:'',playerErr:'',confirmDelGame:false,confirmDelRound:false,confirmDelPlayer:null,dataMode:'',importErr:'',copied:false},extra||{});render();window.scrollTo(0,0)}
+function go(view,extra){Object.assign(UI,{view,askReset:false,skipCredEgg:false,setupErr:'',roundErr:'',playerErr:'',confirmDelGame:false,confirmDelRound:false,confirmDelPlayer:null,dataMode:'',importErr:'',copied:false},extra||{});render();window.scrollTo(0,0)}
 
 let wl=null;
 async function wake(on){try{if(on&&!wl&&navigator.wakeLock){wl=await navigator.wakeLock.request('screen');wl.addEventListener('release',()=>wl=null)}else if(!on&&wl){await wl.release();wl=null}}catch(e){wl=null}}
@@ -1250,6 +1258,8 @@ A['az-cell']=d=>{const pr=UI.draft.data.p[UI.draft.tab];const r=+d.r,c=+d.c;cons
 A['az-floor']=d=>{const pr=UI.draft.data.p[UI.draft.tab];pr.floor=Math.min(14,Math.max(0,toInt(pr.floor)+(+d.d)));render()};
 A['dice-tap']=diceTap;
 A['cr-roll']=()=>eggDice();
+A['egg-reset-yes']=()=>{try{localStorage.removeItem('carnet-eggs')}catch(_){}UI.askReset=false;UI.skipCredEgg=true;render();eggToast('🥚 Secrets remis à zéro')};
+A['egg-reset-no']=()=>{UI.askReset=false;render()};
 A['setup-exp']=d=>{const e=UI.setup.exp,i=e.indexOf(d.k);i>=0?e.splice(i,1):e.push(d.k);render()};
 A['setup-variant']=d=>{UI.setup.variant=d.variant;render()};
 A['setup-toggle']=d=>{const s=UI.setup.selected,i=s.indexOf(d.id);i>=0?s.splice(i,1):s.push(d.id);UI.setupErr='';render()};
