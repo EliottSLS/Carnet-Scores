@@ -74,7 +74,7 @@ rep("L'import remplace toutes les données actuelles.", "L'import remplace toute
 rep("function go(view,extra){", "function go(view,extra){renderPending=false;navPush(view,extra||{});")
 # ---------- bouton retour Android ----------
 rep("let renderPending=false;", r"""let renderPending=false;
-const NAV=[],TRANSIENT=['round','reveal','wheel','chooser','setup'];let navRestoring=false,ignorePop=0;
+const NAV=[],TRANSIENT=['round','reveal','wheel','chooser','setup','credits'];let navRestoring=false,ignorePop=0;
 function navSnap(){return{view:UI.view,gameId:UI.gameId,setup:UI.setup,draft:UI.draft,statGame:UI.statGame,statVar:UI.statVar,ch:UI.ch,wheel:UI.wheel,wheelBack:UI.wheelBack,revealStep:UI.revealStep,duel:0}}
 function navPush(view,extra){if(navRestoring)return;
   if(view===UI.view&&(extra.gameId===undefined||extra.gameId===UI.gameId))return;
